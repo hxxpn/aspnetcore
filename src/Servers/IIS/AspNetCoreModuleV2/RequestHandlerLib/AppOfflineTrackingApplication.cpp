@@ -50,7 +50,7 @@ HRESULT AppOfflineTrackingApplication::StartMonitoringAppOflineImpl()
     return S_OK;
 }
 
-void AppOfflineTrackingApplication::OnAppOffline()
+void AppOfflineTrackingApplication::OnAppOffline(bool fDllChange)
 {
     if (m_fAppOfflineProcessed.exchange(true))
     {
@@ -74,5 +74,5 @@ void AppOfflineTrackingApplication::OnAppOffline()
             m_applicationPath.c_str());
     }
 
-    Stop(/*fServerInitiated*/ false);
+    Stop(/*fServerInitiated*/ false, fDllChange);
 }

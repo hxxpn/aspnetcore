@@ -38,12 +38,20 @@ public:
 
     static
     DWORD
-    WINAPI RunNotificationCallback(LPVOID);
+    WINAPI TriggerAppOfflineShutdown(LPVOID);
+
+    static
+    DWORD
+    WINAPI TriggerDllChangeShutdown(LPVOID);
 
     HRESULT HandleChangeCompletion(DWORD cbCompletion);
 
     HRESULT Monitor();
     void StopMonitor();
+
+    HRESULT CallShutdown();
+
+    bool                    _fDllChanged;
 
 private:
     HandleWrapper<NullHandleTraits>               m_hCompletionPort;
@@ -56,6 +64,7 @@ private:
     STRU                    _strDirectoryName;
     STRU                    _strFullName;
     LONG                    _lStopMonitorCalled {};
+    LONG                    _lShutdownCalled {};
     bool                    _fTrackDllChanges;
     OVERLAPPED              _overlapped;
     std::unique_ptr<AppOfflineTrackingApplication, IAPPLICATION_DELETER> _pApplication;

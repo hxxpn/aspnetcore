@@ -57,7 +57,7 @@ APPLICATION_INFO::CreateHandler(
                 LOG_INFO(L"Application went offline");
 
                 // Call to wait for application to complete stopping
-                m_pApplication->Stop(/* fServerInitiated */ false);
+                m_pApplication->Stop(/* fServerInitiated */ false, /* fDllChange*/ false);
                 m_pApplication = nullptr;
                 m_pApplicationFactory = nullptr;
             }
@@ -134,6 +134,7 @@ APPLICATION_INFO::CreateApplication(IHttpContext& pHttpContext)
         }
         catch (...)
         {
+            OBSERVE_CAUGHT_EXCEPTION();
             EventLog::Error(
                 ASPNETCORE_CONFIGURATION_LOAD_ERROR,
                 ASPNETCORE_CONFIGURATION_LOAD_ERROR_MSG,
@@ -237,7 +238,7 @@ APPLICATION_INFO::ShutDownApplication(bool fServerInitiated)
     if (m_pApplication)
     {
         LOG_INFOF(L"Stopping application '%ls'", QueryApplicationInfoKey().c_str());
-        m_pApplication->Stop(fServerInitiated);
+        m_pApplication->Stop(fServerInitiated, /* fDllChange*/ false);
         m_pApplication = nullptr;
         m_pApplicationFactory = nullptr;
     }

@@ -44,7 +44,7 @@ PollingAppOfflineApplication::CheckAppOffline()
 
     if (m_fAppOfflineFound != (m_mode == StopWhenRemoved))
     {
-        Stop(/* fServerInitiated */ false);
+        Stop(/* fServerInitiated */ false, /* fDllChange */ false);
     }
 }
 

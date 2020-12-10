@@ -11,7 +11,8 @@ FILE_WATCHER::FILE_WATCHER() :
     m_hCompletionPort(NULL),
     m_hChangeNotificationThread(NULL),
     m_fThreadExit(FALSE),
-    _fTrackDllChanges(FALSE)
+    _fTrackDllChanges(FALSE),
+    _fDllChanged(FALSE)
 {
 }
 
@@ -19,6 +20,7 @@ FILE_WATCHER::~FILE_WATCHER()
 {
     StopMonitor();
     WaitForMonitor(100);
+    _pApplication.reset(nullptr);
 }
 
 void FILE_WATCHER::WaitForMonitor(DWORD dwRetryCounter)
@@ -149,14 +151,31 @@ Win32 error
 
     while (TRUE)
     {
-        fSuccess = GetQueuedCompletionStatus(
-            pFileMonitor->m_hCompletionPort,
-            &cbCompletion,
-            &completionKey,
-            &pOverlapped,
-            INFINITE);
+        if (pFileMonitor->_fDllChanged)
+        {
+            // in debounce mode waiting for all files to change before shutting down.
+            fSuccess = GetQueuedCompletionStatus(
+                pFileMonitor->m_hCompletionPort,
+                &cbCompletion,
+                &completionKey,
+                &pOverlapped,
+                500);
+        }
+        else
+        {
+            fSuccess = GetQueuedCompletionStatus(
+                pFileMonitor->m_hCompletionPort,
+                &cbCompletion,
+                &completionKey,
+                &pOverlapped,
+                INFINITE);
+        }
 
-        DBG_ASSERT(fSuccess);
+        if (!fSuccess)
+        {
+            break;
+        }
+
         dwErrorStatus = fSuccess ? ERROR_SUCCESS : GetLastError();
 
         if (completionKey == FILE_WATCHER_SHUTDOWN_KEY)
@@ -179,6 +198,12 @@ Win32 error
         }
         pOverlapped = NULL;
         cbCompletion = 0;
+    }
+
+    if (pFileMonitor->_fDllChanged)
+    {
+        // start shutdown.
+        pFileMonitor->CallShutdown();
     }
 
     pFileMonitor->m_fThreadExit = TRUE;
@@ -211,7 +236,6 @@ HRESULT
 --*/
 {
     BOOL                        fFileChanged = FALSE;
-    BOOL                        fDllChanged = FALSE;
 
     // When directory handle is closed then HandleChangeCompletion
     // happens with cbCompletion = 0 and dwCompletionStatus = 0
@@ -233,7 +257,10 @@ HRESULT
     //
     if (cbCompletion == 0)
     {
-        fFileChanged = TRUE;
+        if (!_fDllChanged)
+        {
+            fFileChanged = TRUE;
+        }
     }
     else
     {
@@ -262,8 +289,8 @@ HRESULT
             std::filesystem::path notificationPath(notification);
             if (_fTrackDllChanges && notificationPath.extension().compare(L".dll") == 0)
             {
-                fFileChanged = TRUE;
-                fDllChanged = TRUE;
+                _fDllChanged = TRUE;
+                _pApplication->DelayShutdown();
             }
 
             //
@@ -286,13 +313,9 @@ HRESULT
     {
         // Reference application before
         _pApplication->ReferenceApplication();
-        //if (fDllChanged)
-        //{
-        //    // wait for all file changes to complete
-        //    PostQueuedCompletionStatus(m_hCompletionPort, 0, FILE_WATCHER_SHUTDOWN_KEY, NULL);
-        //}
 
-        RETURN_LAST_ERROR_IF(!QueueUserWorkItem(RunNotificationCallback, _pApplication.get(), WT_EXECUTEDEFAULT));
+        // Don't call shutdown yet for dll change, debounce.
+        RETURN_IF_FAILED(CallShutdown());
     }
 
     return S_OK;
@@ -300,20 +323,52 @@ HRESULT
 
 DWORD
 WINAPI
-FILE_WATCHER::RunNotificationCallback(
+FILE_WATCHER::TriggerAppOfflineShutdown(
     LPVOID  pvArg
 )
 {
     // Recapture application instance into unique_ptr
     auto pApplication = std::unique_ptr<AppOfflineTrackingApplication, IAPPLICATION_DELETER>(static_cast<AppOfflineTrackingApplication*>(pvArg));
-    DBG_ASSERT(pFileMonitor != NULL);
-    pApplication->OnAppOffline();
+    pApplication->OnAppOffline(/* fdllChange */ false);
 
     return 0;
 }
 
+DWORD
+WINAPI
+FILE_WATCHER::TriggerDllChangeShutdown(
+    LPVOID  pvArg
+)
+{
+    // Recapture application instance into unique_ptr
+    auto pApplication = std::unique_ptr<AppOfflineTrackingApplication, IAPPLICATION_DELETER>(static_cast<AppOfflineTrackingApplication*>(pvArg));
+    pApplication->OnAppOffline(/* fdllChange */ true);
+
+    return 0;
+}
+
+
 HRESULT
-FILE_WATCHER::Monitor(VOID)
+FILE_WATCHER::CallShutdown()
+{
+    if (InterlockedExchange(&_lShutdownCalled, 1) == 1)
+    {
+        return S_OK;
+    }
+
+    if (_fDllChanged)
+    {
+        RETURN_LAST_ERROR_IF(!QueueUserWorkItem(TriggerDllChangeShutdown, _pApplication.get(), WT_EXECUTEDEFAULT));
+    }
+    else
+    {
+        RETURN_LAST_ERROR_IF(!QueueUserWorkItem(TriggerAppOfflineShutdown, _pApplication.get(), WT_EXECUTEDEFAULT));
+    }
+    return S_OK;
+}
+
+HRESULT
+FILE_WATCHER::Monitor()
 {
     HRESULT hr = S_OK;
     DWORD   cbRead;
@@ -346,14 +401,12 @@ FILE_WATCHER::StopMonitor()
     // we know that HandleChangeCompletion() call
     // can be ignored
     //
-    if (_lStopMonitorCalled)
+    if (InterlockedExchange(&_lStopMonitorCalled, 1) == 1)
     {
         return;
     }
 
-    InterlockedExchange(&_lStopMonitorCalled, 1);
     // signal the file watch thread to exit
     PostQueuedCompletionStatus(m_hCompletionPort, 0, FILE_WATCHER_SHUTDOWN_KEY, NULL);
     // Release application reference
-    _pApplication.reset(nullptr);
 }

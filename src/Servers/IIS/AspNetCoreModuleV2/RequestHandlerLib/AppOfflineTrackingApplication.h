@@ -36,7 +36,7 @@ public:
 
     virtual
     VOID
-    OnAppOffline(bool fDllChange);
+    OnAppOffline();
 
     // TODO protected
     bool                                         m_detectedAppOffline;

@@ -168,22 +168,6 @@ HRESULT Environment::CopyToDirectory(std::filesystem::path destination, std::wst
 
     // Always does a copy on startup, as if there are not files to update
     // this copy should be fast.
-    if (!std::filesystem::exists(destination))
-    {
-        // TODO how to handle running as app pool identity? Where to copy?
-        std::filesystem::create_directory(destination);
-    }
-    for (int i = 0; i < 5; i++)
-    {
-        try
-        {
-            std::filesystem::copy(source, destination, std::filesystem::copy_options::recursive | std::filesystem::copy_options::update_existing);
-            break;
-        }
-        catch (...)
-        {
-        }
-    }
-   
+    std::filesystem::copy(source, destination, std::filesystem::copy_options::recursive | std::filesystem::copy_options::update_existing);
     return S_OK;
 }

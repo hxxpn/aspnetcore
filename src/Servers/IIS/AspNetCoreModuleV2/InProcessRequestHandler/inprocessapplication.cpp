@@ -177,7 +177,7 @@ IN_PROCESS_APPLICATION::LoadManagedApplication(ErrorContext& errorContext)
         }
         else
         {
-            Stop(/* fServerInitiated */ false, /* fDllChange */ false);
+            Stop(/* fServerInitiated */false);
         }
         throw InvalidOperationException(format(L"Managed server didn't initialize after %u ms.", m_pConfig->QueryStartupTimeLimitInMS()));
     }
@@ -399,9 +399,7 @@ void IN_PROCESS_APPLICATION::QueueStop()
     std::thread stoppingThread([](std::unique_ptr<IN_PROCESS_APPLICATION, IAPPLICATION_DELETER> application)
     {
         LOG_INFO(L"Starting in-process stop thread");
-        //Stop(/* fServerInitiated */ false, /* fDllChange */ false);
-
-        application->Stop(/* fServerInitiated */ false, /* fDllChange */ false);
+        application->Stop(false);
         LOG_INFO(L"Stopping in-process stop thread");
     }, ::ReferenceApplication(this));
 

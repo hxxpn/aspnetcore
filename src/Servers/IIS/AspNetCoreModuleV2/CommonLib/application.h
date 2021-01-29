@@ -58,36 +58,21 @@ public:
     }
 
     VOID
-    Stop(bool fServerInitiated, bool fDllChange) override
+    Stop(bool fServerInitiated) override
     {
         SRWExclusiveLock stopLock(m_stopLock);
 
         {
             SRWExclusiveLock dataLock(m_dataLock);
-
             if (m_fStopCalled)
             {
                 return;
             }
 
-            if (m_delayShutdown && !fDllChange)
-            {
-                return;
-            }
             m_fStopCalled = true;
         }
 
         StopInternal(fServerInitiated);
-    }
-
-    VOID
-    DelayShutdown()
-    {
-        SRWExclusiveLock stopLock(m_stopLock);
-        {
-            SRWExclusiveLock dataLock(m_dataLock);
-            m_delayShutdown = true;
-        }
     }
 
     virtual
@@ -144,7 +129,6 @@ protected:
     SRWLOCK m_stopLock{};
     SRWLOCK m_dataLock {};
     bool m_fStopCalled;
-    bool m_delayShutdown;
     std::wstring m_applicationPhysicalPath;
 
 private:

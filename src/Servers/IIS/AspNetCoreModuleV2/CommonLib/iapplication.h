@@ -17,7 +17,7 @@ class IAPPLICATION
 public:
     virtual
     VOID
-    Stop(bool fServerInitiated, bool fDllChange) = 0;
+    Stop(bool fServerInitiated) = 0;
 
     virtual
     ~IAPPLICATION() = 0 { };

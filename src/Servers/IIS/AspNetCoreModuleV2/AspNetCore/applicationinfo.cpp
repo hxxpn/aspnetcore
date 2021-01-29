@@ -191,7 +191,33 @@ APPLICATION_INFO::TryCreateApplication(IHttpContext& pHttpContext, const ShimOpt
         {
             shadowCopyPath = std::filesystem::absolute(std::filesystem::path(physicalPath) / shadowCopyPath);
         }
+        // Instead of copying to shadow copy directory, find all folders with versions, and grab highest one.
+        auto directoryName = 0;
+        std::string directoryNameStr = "0";
+        for (auto& entry : std::filesystem::directory_iterator(shadowCopyPath))
+        {
+            if (entry.is_directory())
+            {
+                try
+                {
+                    // TODO maybe able to read last directory in directory iteration?
+                    std::string::size_type sz;
+                    int i_dec = std::stoi(entry.path(), &sz);
+                    if (i_dec > directoryName)
+                    {
+                        directoryName = i_dec;
+                        directoryNameStr = std::string(entry.path().string());
+                    }
+                }
+                catch (const std::exception&)
+                {
+                    // Ignore any folders that can't be converted to an int.
+                }
+            }
+        }
 
+        // TODO delete all other directories in this folder.
+        shadowCopyPath = shadowCopyPath / std::filesystem::path(directoryNameStr);
         RETURN_IF_FAILED(Environment::CopyToDirectory(shadowCopyPath, physicalPath, options.QueryCleanShadowCopyDirectory()));
     }
    

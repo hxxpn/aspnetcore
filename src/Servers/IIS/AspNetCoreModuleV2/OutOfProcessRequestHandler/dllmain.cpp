@@ -252,7 +252,6 @@ CreateApplication(
 {
     TraceContextScope traceScope(FindParameter<IHttpTraceContext*>("TraceContext", pParameters, nParameters));
     auto pSite = FindParameter<IHttpSite*>("Site", pParameters, nParameters);
-    auto shadowCopy = FindParameter<PCWSTR> ("ShadowCopyDirectory", pParameters, nParameters);
 
     InitializeGlobalConfiguration(pServer);
 
@@ -262,7 +261,7 @@ CreateApplication(
 
     RETURN_IF_FAILED(EnsureOutOfProcessInitializtion(pHttpApplication));
 
-    std::unique_ptr<OUT_OF_PROCESS_APPLICATION> pApplication = std::make_unique<OUT_OF_PROCESS_APPLICATION>(*pHttpApplication, std::move(pRequestHandlerConfig), shadowCopy);
+    std::unique_ptr<OUT_OF_PROCESS_APPLICATION> pApplication = std::make_unique<OUT_OF_PROCESS_APPLICATION>(*pHttpApplication, std::move(pRequestHandlerConfig));
 
     RETURN_IF_FAILED(pApplication->Initialize());
     RETURN_IF_FAILED(pApplication->StartMonitoringAppOffline());

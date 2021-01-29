@@ -103,7 +103,6 @@ CreateApplication(
 {
     TraceContextScope traceScope(FindParameter<IHttpTraceContext*>("TraceContext", pParameters, nParameters));
     const auto pSite = FindParameter<IHttpSite*>("Site", pParameters, nParameters);
-    const auto shadowCopyPtr = FindParameter<PCWSTR>("ShadowCopyDirectory", pParameters, nParameters);
 
     try
     {
@@ -114,7 +113,7 @@ CreateApplication(
         // means that server is shutting does and request arrived in the meantime
         if (g_fInProcessApplicationCreated)
         {
-            *ppApplication = new ShuttingDownApplication(*pServer, *pHttpApplication, shadowCopyPtr);
+            *ppApplication = new ShuttingDownApplication(*pServer, *pHttpApplication);
             return S_OK;
         }
 
@@ -129,7 +128,7 @@ CreateApplication(
         errorContext.generalErrorType = "ASP.NET Core app failed to start";
         errorContext.errorReason = "<ul><li>The app failed to start</li><li>The app started but then stopped</li><li>The app started but threw an exception during startup</li></ul>";
 
-        if (!FAILED_LOG(hr = IN_PROCESS_APPLICATION::Start(*pServer, pSite, *pHttpApplication, pParameters, nParameters, inProcessApplication, errorContext, shadowCopyPtr)))
+        if (!FAILED_LOG(hr = IN_PROCESS_APPLICATION::Start(*pServer, pSite, *pHttpApplication, pParameters, nParameters, inProcessApplication, errorContext)))
         {
             *ppApplication = inProcessApplication.release();
         }
@@ -155,8 +154,7 @@ CreateApplication(
                 content,
                 errorContext.statusCode,
                 errorContext.subStatusCode,
-                "Internal Server Error",
-                shadowCopyPtr);
+                "Internal Server Error");
 
             RETURN_IF_FAILED(pErrorApplication->StartMonitoringAppOffline());
             *ppApplication = pErrorApplication.release();

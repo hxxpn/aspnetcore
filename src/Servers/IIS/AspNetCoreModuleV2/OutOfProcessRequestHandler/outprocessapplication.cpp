@@ -7,9 +7,8 @@
 
 OUT_OF_PROCESS_APPLICATION::OUT_OF_PROCESS_APPLICATION(
     IHttpApplication& pApplication,
-    std::unique_ptr<REQUESTHANDLER_CONFIG> pConfig,
-    std::wstring shadowCopy) :
-    AppOfflineTrackingApplication(pApplication, shadowCopy),
+    std::unique_ptr<REQUESTHANDLER_CONFIG> pConfig) :
+    AppOfflineTrackingApplication(pApplication, std::wstring()),
     m_fWebSocketSupported(WEBSOCKET_STATUS::WEBSOCKET_UNKNOWN),
     m_pConfig(std::move(pConfig))
 {

@@ -18,15 +18,14 @@ public:
         const std::string& errorPageContent,
         USHORT statusCode,
         USHORT subStatusCode,
-        const std::string& statusText,
-        std::wstring shadowCopy)
+        const std::string& statusText)
         : m_disableLogs(disableLogs),
         m_HR(hr),
         m_error(errorPageContent),
         m_statusCode(statusCode),
         m_subStatusCode(subStatusCode),
         m_statusText(std::move(statusText)),
-        InProcessApplicationBase(pServer, pApplication, shadowCopy)
+        InProcessApplicationBase(pServer, pApplication, std::wstring())
     {
     }
 

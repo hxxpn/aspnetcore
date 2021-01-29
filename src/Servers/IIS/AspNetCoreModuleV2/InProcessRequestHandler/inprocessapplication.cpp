@@ -21,9 +21,10 @@ IN_PROCESS_APPLICATION::IN_PROCESS_APPLICATION(
     IHttpApplication& pApplication,
     std::unique_ptr<InProcessOptions> pConfig,
     APPLICATION_PARAMETER* pParameters,
-    DWORD                  nParameters,
-    std::wstring shadowCopy) :
-    InProcessApplicationBase(pHttpServer, pApplication, shadowCopy),
+    DWORD                  nParameters) :
+    InProcessApplicationBase(pHttpServer,
+        pApplication,
+        FindParameter<PCWSTR>("ShadowCopyDirectory", pParameters, nParameters)),
     m_Initialized(false),
     m_blockManagedCallbacks(true),
     m_waitForShutdown(true),
@@ -249,7 +250,7 @@ IN_PROCESS_APPLICATION::ExecuteApplication()
                 LOG_INFOF(L"Setting dll directory to %s", currentDirectory.c_str());
             }
 
-            // Keep as original directory
+            // I think I still want this to be the current directory
             LOG_LAST_ERROR_IF(!SetCurrentDirectory(this->QueryApplicationPhysicalPath().c_str()));
 
             LOG_INFOF(L"Setting current directory to %s", this->QueryApplicationPhysicalPath().c_str());
@@ -413,15 +414,14 @@ HRESULT IN_PROCESS_APPLICATION::Start(
     APPLICATION_PARAMETER* pParameters,
     DWORD nParameters,
     std::unique_ptr<IN_PROCESS_APPLICATION, IAPPLICATION_DELETER>& application,
-    ErrorContext& errorContext,
-    std::wstring shadowCopy)
+    ErrorContext& errorContext)
 {
     try
     {
         std::unique_ptr<InProcessOptions> options;
         THROW_IF_FAILED(InProcessOptions::Create(pServer, pSite, pHttpApplication, options));
         application = std::unique_ptr<IN_PROCESS_APPLICATION, IAPPLICATION_DELETER>(
-            new IN_PROCESS_APPLICATION(pServer, pHttpApplication, std::move(options), pParameters, nParameters, shadowCopy));
+            new IN_PROCESS_APPLICATION(pServer, pHttpApplication, std::move(options), pParameters, nParameters));
         THROW_IF_FAILED(application->LoadManagedApplication(errorContext));
         return S_OK;
     }

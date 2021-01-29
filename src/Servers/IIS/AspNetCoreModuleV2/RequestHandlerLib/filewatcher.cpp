@@ -18,7 +18,7 @@ FILE_WATCHER::FILE_WATCHER() :
 FILE_WATCHER::~FILE_WATCHER()
 {
     StopMonitor();
-    WaitForMonitor(100);
+    WaitForMonitor(20);
 }
 
 void FILE_WATCHER::WaitForMonitor(DWORD dwRetryCounter)
@@ -59,9 +59,11 @@ FILE_WATCHER::Create(
     _In_ PCWSTR                  pszDirectoryToMonitor,
     _In_ PCWSTR                  pszFileNameToMonitor,
     _In_ bool                    fTrackDllChanges,
+    _In_ std::wstring            shadowCopyPath,
     _In_ AppOfflineTrackingApplication *pApplication
 )
 {
+    _shadowCopyPath = shadowCopyPath;
     RETURN_LAST_ERROR_IF_NULL(m_hCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0));
 
     RETURN_LAST_ERROR_IF_NULL(m_hChangeNotificationThread = CreateThread(NULL,
@@ -286,12 +288,15 @@ HRESULT
     {
         // Reference application before
         _pApplication->ReferenceApplication();
-        //if (fDllChanged)
-        //{
-        //    // wait for all file changes to complete
-        //    PostQueuedCompletionStatus(m_hCompletionPort, 0, FILE_WATCHER_SHUTDOWN_KEY, NULL);
-        //}
+        if (fDllChanged)
+        {
+            // wait for all file changes to complete
+            PostQueuedCompletionStatus(m_hCompletionPort, 0, FILE_WATCHER_SHUTDOWN_KEY, NULL);
+            WaitForMonitor(100); // 5 seconds here.
 
+            // Copy contents before shutdown
+            RETURN_IF_FAILED(Environment::CopyToDirectory(_shadowCopyPath, _strDirectoryName.QueryStr(), false));
+        }
         RETURN_LAST_ERROR_IF(!QueueUserWorkItem(RunNotificationCallback, _pApplication.get(), WT_EXECUTEDEFAULT));
     }
 

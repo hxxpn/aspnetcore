@@ -17,8 +17,7 @@ class OUT_OF_PROCESS_APPLICATION : public AppOfflineTrackingApplication
 public:
     OUT_OF_PROCESS_APPLICATION(
         IHttpApplication& pApplication,
-        std::unique_ptr<REQUESTHANDLER_CONFIG> pConfig,
-        std::wstring shadowCopy);
+        std::unique_ptr<REQUESTHANDLER_CONFIG> pConfig);
 
     __override
     ~OUT_OF_PROCESS_APPLICATION() override;

@@ -29,6 +29,7 @@ public:
         _In_ PCWSTR                  pszDirectoryToMonitor,
         _In_ PCWSTR                  pszFileNameToMonitor,
         _In_ bool                    fTrackDllChanges,
+        _In_ std::wstring            shadowCopyPath,
         _In_ AppOfflineTrackingApplication *pApplication
     );
 
@@ -57,6 +58,7 @@ private:
     STRU                    _strFullName;
     LONG                    _lStopMonitorCalled {};
     bool                    _fTrackDllChanges;
+    std::wstring            _shadowCopyPath;
     OVERLAPPED              _overlapped;
     std::unique_ptr<AppOfflineTrackingApplication, IAPPLICATION_DELETER> _pApplication;
 };

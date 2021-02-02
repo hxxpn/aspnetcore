@@ -12,6 +12,7 @@ import { TestLogger } from "./TestLogger";
 import { HttpConnection } from "@microsoft/signalr/dist/esm/HttpConnection";
 import { Platform } from "@microsoft/signalr/dist/esm/Utils";
 import "./LogBannerReporter";
+import { PromiseSource } from "./Utils";
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = DEFAULT_TIMEOUT_INTERVAL;
 
@@ -23,7 +24,7 @@ const commonOptions: IHttpConnectionOptions = {
 };
 
 describe("connection", () => {
-    it("can connect to the server without specifying transport explicitly", (done) => {
+    it("can connect to the server without specifying transport explicitly", async () => {
         const message = "Hello World!";
         const connection = new HttpConnection(USED_ECHOENDPOINT_URL, {
             ...commonOptions,
@@ -35,23 +36,23 @@ describe("connection", () => {
             }
         };
 
+        const closedPromise = new PromiseSource();
         connection.onclose = (error: any) => {
             expect(error).toBeUndefined();
-            done();
+            closedPromise.resolve();
         };
 
-        connection.start(TransferFormat.Text).then(() => {
-            connection.send(message);
-        }).catch((e) => {
-            fail(e);
-            done();
-        });
+        await connection.start(TransferFormat.Text);
+
+        await connection.send(message);
+
+        await closedPromise;
     });
 
     eachTransport((transportType) => {
         eachHttpClient((httpClient) => {
             describe(`over ${HttpTransportType[transportType]} with ${(httpClient.constructor as any).name}`, () => {
-                it("can send and receive messages", (done) => {
+                it("can send and receive messages", async () => {
                     const message = "Hello World!";
                     // the url should be resolved relative to the document.location.host
                     // and the leading '/' should be automatically added to the url
@@ -67,20 +68,20 @@ describe("connection", () => {
                         }
                     };
 
+                    const closedPromise = new PromiseSource();
                     connection.onclose = (error: any) => {
                         expect(error).toBeUndefined();
-                        done();
+                        closedPromise.resolve();
                     };
 
-                    connection.start(TransferFormat.Text).then(() => {
-                        connection.send(message);
-                    }).catch((e: any) => {
-                        fail(e);
-                        done();
-                    });
+                    await connection.start(TransferFormat.Text);
+
+                    await connection.send(message);
+
+                    await closedPromise;
                 });
 
-                it("does not log content of messages sent or received by default", (done) => {
+                it("does not log content of messages sent or received by default", async () => {
                     TestLogger.saveLogsAndReset();
                     const message = "Hello World!";
 
@@ -91,6 +92,7 @@ describe("connection", () => {
                         transport: transportType,
                     });
 
+                    const closedPromise = new PromiseSource();
                     connection.onreceive = (data: any) => {
                         if (data === message) {
                             connection.stop();
@@ -105,18 +107,17 @@ describe("connection", () => {
                         for (const [_, __, logMessage] of TestLogger.instance.currentLog.messages) {
                             expect(logMessage).not.toContain(message);
                         }
-                        done();
+                        closedPromise.resolve();
                     };
 
-                    connection.start(TransferFormat.Text).then(() => {
-                        connection.send(message);
-                    }).catch((e) => {
-                        fail(e);
-                        done();
-                    });
+                    await connection.start(TransferFormat.Text);
+
+                    await connection.send(message);
+
+                    await closedPromise;
                 });
 
-                it("does log content of messages sent or received when enabled", (done) => {
+                it("does log content of messages sent or received when enabled", async () => {
                     TestLogger.saveLogsAndReset();
                     const message = "Hello World!";
 
@@ -134,6 +135,7 @@ describe("connection", () => {
                         }
                     };
 
+                    const closedPromise = new PromiseSource();
                     // @ts-ignore: We don't use the error parameter intentionally.
                     connection.onclose = (error) => {
                         // Search the logs for the message content
@@ -148,15 +150,14 @@ describe("connection", () => {
 
                         // One match for send, one for receive.
                         expect(matches).toEqual(2);
-                        done();
+                        closedPromise.resolve();
                     };
 
-                    connection.start(TransferFormat.Text).then(() => {
-                        connection.send(message);
-                    }).catch((e: any) => {
-                        fail(e);
-                        done();
-                    });
+                    await connection.start(TransferFormat.Text);
+
+                    await connection.send(message);
+
+                    await closedPromise;
                 });
 
                 // withCredentials doesn't make sense in Node or when using WebSockets
@@ -164,9 +165,8 @@ describe("connection", () => {
                     // tests run through karma during automation which is cross-site, but manually running the server will result in these tests failing
                     // so we check for cross-site
                     !(window && ECHOENDPOINT_URL.match(`^${window.location.href}`))) {
-                    it("honors withCredentials flag", (done) => {
+                    it("honors withCredentials flag", async () => {
                         TestLogger.saveLogsAndReset();
-                        const message = "Hello World!";
 
                         // The server will set some response headers for the '/negotiate' endpoint
                         const connection = new HttpConnection(USED_ECHOENDPOINT_URL, {
@@ -180,17 +180,15 @@ describe("connection", () => {
                             fail(new Error(`Unexpected messaged received '${data}'.`));
                         };
 
+                        const closedPromise = new PromiseSource();
                         // @ts-ignore: We don't use the error parameter intentionally.
                         connection.onclose = (error) => {
-                            done();
+                            closedPromise.resolve();
                         };
 
-                        connection.start(TransferFormat.Text).then(() => {
-                            connection.send(message);
-                        }).catch((e: any) => {
-                            fail(e);
-                            done();
-                        });
+                        await connection.start(TransferFormat.Text);
+
+                        await closedPromise;
                     });
                 }
             });

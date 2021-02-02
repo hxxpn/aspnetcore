@@ -46,7 +46,7 @@
     "src/**/*"
   ],
   "devDependencies": {
-    "@types/eventsource": "^1.0.2",
+    "@types/eventsource": "^1.1.5",
     "@types/jest": "^23.3.2",
     "@types/node": "^10.9.4",
     "@types/tough-cookie": "^2.3.6",

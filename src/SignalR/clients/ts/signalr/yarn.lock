@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@types/caseless/-/caseless-0.12.1.tgz#9794c69c8385d0192acc471a540d1f8e0d16218a"
   integrity sha512-FhlMa34NHp9K5MY1Uz8yb+ZvuX0pnvn3jScRSNAb75KHGB8d3rEU6hqMs3Z2vjuytcMfRg6c5CHMc3wtYyD2/A==
 
-"@types/eventsource@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@types/eventsource/-/eventsource-1.0.2.tgz#5f53734831da4748f9a7b394d79d5822ed110924"
-  integrity sha512-CprOekOB/lzAiGDF1MPWHX053RVTCYyYU3M8HOQXpdD0QfXijM//Na/hZxHaQv4ydsiB1uOBQ3p8S5nXpP4nNQ==
+"@types/eventsource@^1.1.5":
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@types/eventsource/-/eventsource-1.1.5.tgz#408e9b45efb176c8bea672ab58c81e7ab00d24bc"
+  integrity sha512-BA9q9uC2PAMkUS7DunHTxWZZaVpeNzDG8lkBxcKwzKJClfDQ4Z59/Csx7HSH/SIqFN2JWh0tAKAM6k/wRR0OZg==
 
 "@types/form-data@*":
   version "2.2.1"

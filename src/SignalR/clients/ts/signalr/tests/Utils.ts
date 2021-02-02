@@ -5,8 +5,8 @@ jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
 
 export function registerUnhandledRejectionHandler(): void {
     process.on("unhandledRejection", (error) => {
-        if (error && error.stack) {
-            console.error(error.stack);
+        if (error && (error as Error).stack) {
+            console.error((error as Error).stack);
         } else {
             console.error(error);
         }
@@ -54,6 +54,8 @@ export class PromiseSource<T = void> implements Promise<T> {
     public reject(reason?: any) {
         this.rejecter(reason);
     }
+
+    public [Symbol.toStringTag]: string;
 
     // Look like a promise so we can be awaited directly;
     public then<TResult1 = T, TResult2 = never>(onfulfilled?: (value: T) => TResult1 | PromiseLike<TResult1>, onrejected?: (reason: any) => TResult2 | PromiseLike<TResult2>): Promise<TResult1 | TResult2> {

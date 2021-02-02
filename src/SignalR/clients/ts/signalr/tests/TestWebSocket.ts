@@ -101,7 +101,12 @@ export class TestWebSocket {
     public static readonly OPEN: number = 4;
 }
 
-export class TestEvent {
+export class TestEvent implements Event {
+    public composed: boolean = false;
+    public composedPath(): EventTarget[];
+    public composedPath(): any[] {
+        throw new Error("Method not implemented.");
+    }
     public bubbles: boolean = false;
     public cancelBubble: boolean = false;
     public cancelable: boolean = false;
@@ -136,7 +141,12 @@ export class TestEvent {
     public NONE: number = 0;
 }
 
-export class TestErrorEvent {
+export class TestErrorEvent implements Event {
+    public composed: boolean = false;
+    public composedPath(): EventTarget[];
+    public composedPath(): any[] {
+        throw new Error("Method not implemented.");
+    }
     public colno: number = 0;
     public error: any;
     public filename: string = "";
@@ -179,7 +189,12 @@ export class TestErrorEvent {
     public NONE: number = 0;
 }
 
-export class TestCloseEvent {
+export class TestCloseEvent implements Event {
+    public composed: boolean = false;
+    public composedPath(): EventTarget[];
+    public composedPath(): any[] {
+        throw new Error("Method not implemented.");
+    }
     public code: number = 0;
     public reason: string = "";
     public wasClean: boolean = false;

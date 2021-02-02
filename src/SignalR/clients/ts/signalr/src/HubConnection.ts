@@ -716,7 +716,7 @@ export class HubConnection {
             this.logger.log(LogLevel.Information, "Connection reconnecting.");
         }
 
-        if (this.onreconnecting) {
+        if (this.reconnectingCallbacks.length !== 0) {
             try {
                 this.reconnectingCallbacks.forEach((c) => c.apply(this, [error]));
             } catch (e) {
@@ -749,7 +749,7 @@ export class HubConnection {
                 this.connectionState = HubConnectionState.Connected;
                 this.logger.log(LogLevel.Information, "HubConnection reconnected successfully.");
 
-                if (this.onreconnected) {
+                if (this.reconnectedCallbacks.length !== 0) {
                     try {
                         this.reconnectedCallbacks.forEach((c) => c.apply(this, [this.connection.connectionId]));
                     } catch (e) {

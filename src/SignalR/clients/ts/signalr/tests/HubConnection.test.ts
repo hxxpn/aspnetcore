@@ -1023,7 +1023,7 @@ class TestObserver implements IStreamSubscriber<any> {
     }
 
     constructor() {
-        this.itemsReceived = [] as [any];
+        this.itemsReceived = [] as any as [any];
         this.itemsSource = new PromiseSource<[any]>();
     }
 

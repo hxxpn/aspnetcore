@@ -103,7 +103,7 @@ isarray@~1.0.0:
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
   integrity sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=
 
-msgpack5@^4.0.2:
+msgpack5@^4.5.0:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/msgpack5/-/msgpack5-4.5.0.tgz#c7e6c0fcd5c1aab76e6f551496a57a7ba2e5428d"
   integrity sha512-LYuyrhCncpw29VSAsoYyW8x+eubDtkkXCJQzHKren//b70/71GZcFpys+OpR8Qo5Seeeju6ULz5vIhTblFEMPg==

@@ -1,0 +1,5 @@
+<linker>
+  <assembly fullname="Microsoft.AspNetCore.Components.Forms">
+    <type fullname="Microsoft.AspNetCore.Components.Forms.DataAnnotationsValidator" required="false" />
+  </assembly>
+</linker>

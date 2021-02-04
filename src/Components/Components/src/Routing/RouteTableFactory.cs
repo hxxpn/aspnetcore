@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Components.Routing;
@@ -19,6 +20,7 @@ namespace Microsoft.AspNetCore.Components
             new ConcurrentDictionary<Key, RouteTable>();
         public static readonly IComparer<RouteEntry> RoutePrecedence = Comparer<RouteEntry>.Create(RouteComparison);
 
+        [RequiresUnreferencedCode("This API calls Assembly.ExportedTypes. Types and members of the loaded assembly might be removed during trimming.")]
         public static RouteTable Create(IEnumerable<Assembly> assemblies)
         {
             var key = new Key(assemblies.OrderBy(a => a.FullName).ToArray());
@@ -27,13 +29,31 @@ namespace Microsoft.AspNetCore.Components
                 return resolvedComponents;
             }
 
-            var componentTypes = key.Assemblies.SelectMany(a => a.ExportedTypes.Where(t => typeof(IComponent).IsAssignableFrom(t)));
+            var componentTypes = GetRouteableComponents(key.Assemblies);
             var routeTable = Create(componentTypes);
             Cache.TryAdd(key, routeTable);
             return routeTable;
         }
 
-        internal static RouteTable Create(IEnumerable<Type> componentTypes)
+        [RequiresUnreferencedCode("This API calls Assembly.ExportedTypes. Types and members of the loaded assembly might be removed during trimming.")]
+        internal static List<Type> GetRouteableComponents(IEnumerable<Assembly> assemblies)
+        {
+            var routeableComponents = new List<Type>();
+            foreach (var assembly in assemblies)
+            {
+                foreach (var type in assembly.ExportedTypes)
+                {
+                    if (typeof(IComponent).IsAssignableFrom(type) && type.IsDefined(typeof(RouteAttribute)))
+                    {
+                        routeableComponents.Add(type);
+                    }
+                }
+            }
+
+            return routeableComponents;
+        }
+
+        internal static RouteTable Create(List<Type> componentTypes)
         {
             var templatesByHandler = new Dictionary<Type, string[]>();
             foreach (var componentType in componentTypes)

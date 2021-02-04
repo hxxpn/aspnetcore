@@ -42,4 +42,8 @@
     <IgnoreYarnWarnings Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</IgnoreYarnWarnings>
   </PropertyGroup>
 
+  <ItemGroup Condition="Exists('Properties\ILLink.Descriptors.xml')">
+    <EmbeddedResource Include="Properties\ILLink.Descriptors.xml" LogicalName="ILLink.Descriptors.xml" />
+  </ItemGroup>
+
 </Project>

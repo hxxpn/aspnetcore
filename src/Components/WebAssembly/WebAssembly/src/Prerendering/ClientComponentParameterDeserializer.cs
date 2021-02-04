@@ -3,10 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Microsoft.AspNetCore.Components
 {
@@ -22,6 +20,8 @@ namespace Microsoft.AspNetCore.Components
 
         public static WebAssemblyComponentParameterDeserializer Instance { get; } = new WebAssemblyComponentParameterDeserializer(new ComponentParametersTypeCache());
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "This pattern is not linker friendly. https://github.com/dotnet/aspnetcore/issues/29946 tracks making parameters linker friendly.")]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072", Justification = "This pattern is not linker friendly. https://github.com/dotnet/aspnetcore/issues/29946 tracks making parameters linker friendly.")]
         public ParameterView DeserializeParameters(IList<ComponentParameter> parametersDefinitions, IList<object> parameterValues)
         {
             var parametersDictionary = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
@@ -80,6 +80,7 @@ namespace Microsoft.AspNetCore.Components
             return JsonSerializer.Deserialize<ComponentParameter[]>(parametersDefinitions, WebAssemblyComponentSerializationSettings.JsonSerializationOptions)!;
         }
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072:RequiresUnreferencedCode", Justification = "Pattern is not linker safe.")]
         public IList<object> GetParameterValues(string parameterValues)
         {
             return JsonSerializer.Deserialize<IList<object>>(parameterValues, WebAssemblyComponentSerializationSettings.JsonSerializationOptions)!;

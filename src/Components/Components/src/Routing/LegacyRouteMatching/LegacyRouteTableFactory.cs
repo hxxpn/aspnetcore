@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -18,6 +19,7 @@ namespace Microsoft.AspNetCore.Components.LegacyRouteMatching
             new ConcurrentDictionary<Key, LegacyRouteTable>();
         public static readonly IComparer<LegacyRouteEntry> RoutePrecedence = Comparer<LegacyRouteEntry>.Create(RouteComparison);
 
+        [RequiresUnreferencedCode("This API calls Assembly.ExportedTypes. Types and members of the loaded assembly might be removed during trimming.")]
         public static LegacyRouteTable Create(IEnumerable<Assembly> assemblies)
         {
             var key = new Key(assemblies.OrderBy(a => a.FullName).ToArray());
@@ -26,7 +28,7 @@ namespace Microsoft.AspNetCore.Components.LegacyRouteMatching
                 return resolvedComponents;
             }
 
-            var componentTypes = key.Assemblies.SelectMany(a => a.ExportedTypes.Where(t => typeof(IComponent).IsAssignableFrom(t)));
+            var componentTypes = RouteTableFactory.GetRouteableComponents(key.Assemblies);
             var routeTable = Create(componentTypes);
             Cache.TryAdd(key, routeTable);
             return routeTable;

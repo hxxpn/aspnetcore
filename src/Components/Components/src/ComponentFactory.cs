@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Microsoft.AspNetCore.Components.Reflection;
@@ -24,6 +25,7 @@ namespace Microsoft.AspNetCore.Components
             _componentActivator = componentActivator ?? throw new ArgumentNullException(nameof(componentActivator));
         }
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072", Justification = "Requires a gesture that ensures components are always preserved. https://github.com/mono/linker/issues/1806")]
         public IComponent InstantiateComponent(IServiceProvider serviceProvider, Type componentType)
         {
             var component = _componentActivator.CreateInstance(componentType);
@@ -52,6 +54,8 @@ namespace Microsoft.AspNetCore.Components
             initializer(serviceProvider, instance);
         }
 
+
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2077", Justification = "Requires a gesture that ensures components are always preserved. https://github.com/mono/linker/issues/1806")]
         private Action<IServiceProvider, IComponent> CreateInitializer(Type type)
         {
             // Do all the reflection up front

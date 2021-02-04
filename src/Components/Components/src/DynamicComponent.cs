@@ -56,6 +56,7 @@ namespace Microsoft.AspNetCore.Components
         }
 
         /// <inheritdoc />
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072:RequiresUnreferencedCode", Justification = "Requires a gesture that ensures components are always preserved. https://github.com/mono/linker/issues/1806")]
         public Task SetParametersAsync(ParameterView parameters)
         {
             // This manual parameter assignment logic will be marginally faster than calling

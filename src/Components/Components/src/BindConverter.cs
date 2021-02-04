@@ -1288,6 +1288,10 @@ namespace Microsoft.AspNetCore.Components
             private static MethodInfo? _formatEnumValue;
             private static MethodInfo? _formatNullableEnumValue;
 
+            [UnconditionalSuppressMessage(
+                "ReflectionAnalysis",
+                "IL2060:MakeGenericMethod",
+                Justification = "The referenced methods don't have any DynamicallyAccessedMembers annotations. See https://github.com/mono/linker/issues/1727")]
             public static BindFormatter<T> Get<T>()
             {
                 if (!_cache.TryGetValue(typeof(T), out var formatter))
@@ -1421,6 +1425,10 @@ namespace Microsoft.AspNetCore.Components
             private static MethodInfo? _convertToEnum;
             private static MethodInfo? _convertToNullableEnum;
 
+            [UnconditionalSuppressMessage(
+                "ReflectionAnalysis",
+                "IL2060:MakeGenericMethod",
+                Justification = "The referenced methods don't have any DynamicallyAccessedMembers annotations. See https://github.com/mono/linker/issues/1727")]
             public static BindParser<T> Get<T>()
             {
                 if (!_cache.TryGetValue(typeof(T), out var parser))

@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components.RenderTree;
+using static Microsoft.AspNetCore.Internal.LinkerFlags;
 
 namespace Microsoft.AspNetCore.Components.Web
 {
@@ -82,7 +84,7 @@ namespace Microsoft.AspNetCore.Components.Web
 
         }
 
-        static T Deserialize<T>(string json) => JsonSerializer.Deserialize<T>(json, JsonSerializerOptionsProvider.Options)!;
+        static T Deserialize<[DynamicallyAccessedMembers(JsonSerialized)] T>(string json) => JsonSerializer.Deserialize<T>(json, JsonSerializerOptionsProvider.Options)!;
 
         private static EventFieldInfo? InterpretEventFieldInfo(EventFieldInfo? fieldInfo)
         {

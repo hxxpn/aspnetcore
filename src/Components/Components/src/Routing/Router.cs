@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Components.LegacyRouteMatching;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.AspNetCore.Components.Routing
 {
@@ -149,6 +150,7 @@ namespace Microsoft.AspNetCore.Components.Routing
                 : str.Substring(0, firstIndex);
         }
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026:RequiresUnreferencedCode", Justification = "We need a way to ensure components are never trimmed away.")]
         private void RefreshRouteTable()
         {
             var assemblies = AdditionalAssemblies == null ? new[] { AppAssembly } : new[] { AppAssembly }.Concat(AdditionalAssemblies);
@@ -162,7 +164,6 @@ namespace Microsoft.AspNetCore.Components.Routing
                 _assemblies.Clear();
                 _assemblies.UnionWith(assembliesSet);
             }
-
         }
 
         internal virtual void Refresh(bool isNavigationIntercepted)

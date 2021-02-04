@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -16,6 +17,7 @@ namespace Microsoft.JSInterop.Infrastructure
     /// <summary>
     /// Provides methods that receive incoming calls from JS to .NET.
     /// </summary>
+    [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2070", Justification = "Linker does not propogate annotations to generated state machine. https://github.com/mono/linker/issues/1403")]
     public static class DotNetDispatcher
     {
         private const string DisposeDotNetObjectReferenceMethodName = "__Dispose";
@@ -175,6 +177,7 @@ namespace Microsoft.JSInterop.Infrastructure
             }
         }
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2062", Justification = "This pattern is not linker friendly. https://github.com/dotnet/aspnetcore/issues/29946")]
         internal static object?[] ParseArguments(JSRuntime jsRuntime, string methodIdentifier, string arguments, Type[] parameterTypes)
         {
             if (parameterTypes.Length == 0)
@@ -349,6 +352,8 @@ namespace Microsoft.JSInterop.Infrastructure
             }
         }
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "We expect application code is configured to ensure JSInvokable methods are retained. https://github.com/dotnet/aspnetcore/issues/29946")]
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072", Justification = "We expect application code is configured to ensure JSInvokable methods are retained. https://github.com/dotnet/aspnetcore/issues/29946")]
         private static Dictionary<string, (MethodInfo, Type[])> ScanAssemblyForCallableMethods(AssemblyKey assemblyKey)
         {
             // TODO: Consider looking first for assembly-level attributes (i.e., if there are any,

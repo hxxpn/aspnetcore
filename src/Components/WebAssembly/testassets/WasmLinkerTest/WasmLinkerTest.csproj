@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$(DefaultNetCoreTargetFramework)</TargetFramework>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNetCore.Authorization" />
+    <Reference Include="Microsoft.AspNetCore.Components.Authorization" />
+    <Reference Include="Microsoft.AspNetCore.Components" />
+    <Reference Include="Microsoft.AspNetCore.Components.Forms" />
+    <Reference Include="Microsoft.AspNetCore.Components.Web" />
+    <Reference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <Reference Include="Microsoft.JSInterop" />
+    <Reference Include="Microsoft.JSInterop.WebAssembly" />
+  </ItemGroup>
+  <Target Name="ILLinkTrimSharedFramework" DependsOnTargets="ResolveReferences" AfterTargets="Build" Condition="'$(DotNetBuildFromSource)' != 'true' AND '$(SkipTestBuild)' != 'true'">
+    <PropertyGroup>
+      <LibrariesTrimmedArtifactsPath>$([MSBuild]::NormalizePath('$(ArtifactsBinDir)', 'ILLinkTrimAssembly', 'blazor-wasm-trimmed'))</LibrariesTrimmedArtifactsPath>
+      <!-- Link all assemblies -->
+      <ILLinkArgs>$(ILLinkArgs) -c link</ILLinkArgs>
+      <ILLinkArgs>$(ILLinkArgs) -u link</ILLinkArgs>
+      <ILLinkArgs>$(ILLinkArgs) -b true</ILLinkArgs>
+    </PropertyGroup>
+    <ItemGroup>
+      <RootAssemblies Include="@(ReferencePath->HasMetadata('ProjectPath'))" RootMode="visible" />
+    </ItemGroup>
+    <!--
+        When running from Desktop MSBuild, DOTNET_HOST_PATH is not set.
+        In this case, explicitly specify the path to the dotnet host.
+        -->
+    <PropertyGroup Condition=" '$(DOTNET_HOST_PATH)' == '' ">
+      <!-- This is defined when building in Visual Studio. -->
+      <_DotNetHostDirectory>$(NetCoreRoot)</_DotNetHostDirectory>
+      <_DotNetHostFileName>$([System.IO.Path]::GetFileName('$(DotNetTool)'))</_DotNetHostFileName>
+    </PropertyGroup>
+    <ILLink
+        AssemblyPaths=""
+        RootAssemblyNames="@(RootAssemblies)"
+        OutputDirectory="$(LibrariesTrimmedArtifactsPath)"
+        ReferenceAssemblyPaths="@(RuntimePackAsset);@(ReferencePath->WithMetadataValue('ExternallyResolved', 'true'))"
+        ExtraArgs="$(ILLinkArgs) --verbose"
+        ToolExe="$(_DotNetHostFileName)"
+        ToolPath="$(_DotNetHostDirectory)" />
+  </Target>
+</Project>

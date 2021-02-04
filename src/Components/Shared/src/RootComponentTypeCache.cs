@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -11,7 +12,7 @@ namespace Microsoft.AspNetCore.Components
     // A cache for root component types
     internal class RootComponentTypeCache
     {
-        private readonly ConcurrentDictionary<Key, Type?> _typeToKeyLookUp = new ConcurrentDictionary<Key, Type?>();
+        private readonly ConcurrentDictionary<Key, Type?> _typeToKeyLookUp = new();
 
         public Type? GetRootComponent(string assembly, string type)
         {
@@ -26,6 +27,7 @@ namespace Microsoft.AspNetCore.Components
             }
         }
 
+        [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2026", Justification = "Requires a gesture that preserves Components https://github.com/mono/linker/issues/1806")]
         private static Type? ResolveType(Key key, Assembly[] assemblies)
         {
             var assembly = assemblies

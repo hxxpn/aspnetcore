@@ -13,7 +13,8 @@ FILE_WATCHER::FILE_WATCHER() :
     m_hChangeNotificationThread(NULL),
     m_fThreadExit(FALSE),
     _fTrackDllChanges(FALSE),
-    m_copied(false)
+    m_copied(false),
+    m_pShutdownEvent(nullptr)
 {
     m_pShutdownEvent = CreateEvent(
         nullptr,  // default security attributes
@@ -425,9 +426,12 @@ FILE_WATCHER::StopMonitor()
     InterlockedExchange(&_lStopMonitorCalled, 1);
     // signal the file watch thread to exit
     PostQueuedCompletionStatus(m_hCompletionPort, 0, FILE_WATCHER_SHUTDOWN_KEY, NULL);
-    WaitForMonitor(20000);
+    WaitForMonitor(200);
     // See if this waits.
-    WaitForSingleObject(m_pShutdownEvent, 120000);
+    if (_fTrackDllChanges && m_pShutdownEvent != nullptr)
+    {
+        WaitForSingleObject(m_pShutdownEvent, 120000);
+    }
 
     // Release application reference
     _pApplication.reset(nullptr);

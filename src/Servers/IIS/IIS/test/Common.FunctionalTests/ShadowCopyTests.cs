@@ -152,7 +152,7 @@ namespace Microsoft.AspNetCore.Server.IIS.FunctionalTests
             deploymentParameters.HandlerSettings["shadowCopyDirectory"] = directory.FullName;
             var deploymentResult = await DeployAsync(deploymentParameters);
 
-            DirectoryCopy(deploymentResult.ContentRoot, directory.FullName, copySubDirs: true);
+            //DirectoryCopy(deploymentResult.ContentRoot, Path.Combine(directory.FullName, "0"), copySubDirs: true);
 
             await deploymentResult.HttpClient.GetStringAsync("Wow!");
 
@@ -164,7 +164,7 @@ namespace Microsoft.AspNetCore.Server.IIS.FunctionalTests
 
             deploymentResult.AssertWorkerProcessStop();
 
-            EventLogHelpers.VerifyEventLogEvent(deploymentResult, EventLogHelpers.ShutdownFileChange(deploymentResult), Logger);
+            //EventLogHelpers.VerifyEventLogEvent(deploymentResult, EventLogHelpers.ShutdownFileChange(deploymentResult), Logger);
         }
 
         protected static DirectoryInfo CreateTempDirectory()

@@ -15,6 +15,6 @@ namespace Microsoft.AspNetCore.Http.Api
         /// </summary>
         /// <param name="httpContext">The <see cref="HttpContext"/> for the current request.</param>
         /// <returns>A task that represents the asynchronous execute operation.</returns>
-        ValueTask WriteResponseAsync(HttpContext httpContext);
+        Task ExecuteAsync(HttpContext httpContext);
     }
 }

@@ -50,10 +50,10 @@ namespace Microsoft.AspNetCore.Mvc
         /// </summary>
         /// <param name="httpContext">The <see cref="HttpContext"/> for the current request.</param>
         /// <returns>A task that represents the asynchronous execute operation.</returns>
-        public ValueTask WriteResponseAsync(HttpContext httpContext)
+        Task IResult.ExecuteAsync(HttpContext httpContext)
         {
             Execute(httpContext);
-            return default;
+            return Task.CompletedTask;
         }
 
         private void Execute(HttpContext httpContext)

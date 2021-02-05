@@ -15,7 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.Routing.MapAction
 {
-    // Borrows heavily from https://github.com/davidfowl/uController/blob/aa8bcb4b30764e42bd72d326cb2718a4d4eaf4a9/src/uController/HttpHandlerBuilder.cs
     internal class MapActionExpressionTreeBuilder
     {
         private static readonly MethodInfo ChangeTypeMethodInfo = GetMethodInfo<Func<object, Type, object>>((value, type) => Convert.ChangeType(value, type, CultureInfo.InvariantCulture));
@@ -24,9 +23,10 @@ namespace Microsoft.AspNetCore.Routing.MapAction
         private static readonly MethodInfo ExecuteTaskResultOfTMethodInfo = typeof(MapActionExpressionTreeBuilder).GetMethod(nameof(ExecuteTaskResult), BindingFlags.NonPublic | BindingFlags.Static)!;
         private static readonly MethodInfo ExecuteValueResultTaskOfTMethodInfo = typeof(MapActionExpressionTreeBuilder).GetMethod(nameof(ExecuteValueTaskResult), BindingFlags.NonPublic | BindingFlags.Static)!;
         private static readonly MethodInfo GetRequiredServiceMethodInfo = typeof(ServiceProviderServiceExtensions).GetMethod(nameof(ServiceProviderServiceExtensions.GetRequiredService), BindingFlags.Public | BindingFlags.Static, new Type[] { typeof(IServiceProvider) })!;
-        private static readonly MethodInfo ResultWriteResponseAsync = typeof(IResult).GetMethod(nameof(IResult.WriteResponseAsync), BindingFlags.Public | BindingFlags.Instance)!;
+        private static readonly MethodInfo ResultWriteResponseAsync = typeof(IResult).GetMethod(nameof(IResult.ExecuteAsync), BindingFlags.Public | BindingFlags.Instance)!;
         private static readonly MethodInfo StringResultWriteResponseAsync = GetMethodInfo<Func<HttpResponse, string, Task>>((response, text) => HttpResponseWritingExtensions.WriteAsync(response, text, default));
         private static readonly MethodInfo JsonResultWriteResponseAsync = GetMethodInfo<Func<HttpResponse, object, Task>>((response, value) => HttpResponseJsonExtensions.WriteAsJsonAsync(response, value, default));
+        private static readonly MemberInfo CompletedTaskMemberInfo = GetMemberInfo<Func<Task>>(() => Task.CompletedTask);
 
         private static readonly ParameterExpression TargetArg = Expression.Parameter(typeof(object), "target");
         private static readonly ParameterExpression HttpContextParameter = Expression.Parameter(typeof(HttpContext), "httpContext");
@@ -40,15 +40,15 @@ namespace Microsoft.AspNetCore.Routing.MapAction
         {
             // Non void return type
 
-            // ValueTask Invoke(HttpContext httpContext)
+            // Task Invoke(HttpContext httpContext)
             // {
             //     // Action parameters are bound from the request, services, etc... based on attribute and type information.
-            //     return ExecuteValueTask(action(...), httpContext);
+            //     return ExecuteTask(action(...), httpContext);
             // }
 
             // void return type
 
-            // ValueTask Invoke(HttpContext httpContext)
+            // Task Invoke(HttpContext httpContext)
             // {
             //     action(...);
             //     return default;
@@ -151,7 +151,13 @@ namespace Microsoft.AspNetCore.Routing.MapAction
             // Exact request delegate match
             if (method.ReturnType == typeof(void))
             {
-                body = Expression.Constant(default(ValueTask));
+                var bodyExpressions = new List<Expression>
+                {
+                    methodCall,
+                    Expression.Property(null, (PropertyInfo)CompletedTaskMemberInfo)
+                };
+
+                body = Expression.Block(bodyExpressions);
             }
             else if (AwaitableInfo.IsTypeAwaitable(method.ReturnType, out var info))
             {
@@ -224,13 +230,13 @@ namespace Microsoft.AspNetCore.Routing.MapAction
                 body = Expression.Call(JsonResultWriteResponseAsync, HttpResponseExpr, methodCall, Expression.Constant(CancellationToken.None));
             }
 
-            Func<object?, HttpContext, ValueTask>? requestDelegate = null;
+            Func<object?, HttpContext, Task>? requestDelegate = null;
 
             if (needBody)
             {
                 // We need to generate the code for reading from the body before calling into the 
                 // delegate
-                var lambda = Expression.Lambda<Func<object?, HttpContext, object?, ValueTask>>(body, TargetArg, HttpContextParameter, DeserializedBodyArg);
+                var lambda = Expression.Lambda<Func<object?, HttpContext, object?, Task>>(body, TargetArg, HttpContextParameter, DeserializedBodyArg);
                 var invoker = lambda.Compile();
 
                 requestDelegate = async (target, httpContext) =>
@@ -242,7 +248,7 @@ namespace Microsoft.AspNetCore.Routing.MapAction
             }
             else if (needForm)
             {
-                var lambda = Expression.Lambda<Func<object?, HttpContext, ValueTask>>(body, TargetArg, HttpContextParameter);
+                var lambda = Expression.Lambda<Func<object?, HttpContext, Task>>(body, TargetArg, HttpContextParameter);
                 var invoker = lambda.Compile();
 
                 requestDelegate = async (target, httpContext) =>
@@ -256,7 +262,7 @@ namespace Microsoft.AspNetCore.Routing.MapAction
             }
             else
             {
-                var lambda = Expression.Lambda<Func<object?, HttpContext, ValueTask>>(body, TargetArg, HttpContextParameter);
+                var lambda = Expression.Lambda<Func<object?, HttpContext, Task>>(body, TargetArg, HttpContextParameter);
                 var invoker = lambda.Compile();
 
                 requestDelegate = invoker;
@@ -264,7 +270,7 @@ namespace Microsoft.AspNetCore.Routing.MapAction
 
             return httpContext =>
             {
-                return requestDelegate(action.Target, httpContext).AsTask();
+                return requestDelegate(action.Target, httpContext);
             };
         }
 
@@ -327,34 +333,34 @@ namespace Microsoft.AspNetCore.Routing.MapAction
 
         private static async ValueTask ExecuteTask<T>(Task<T> task, HttpContext httpContext)
         {
-            await new JsonResult(await task).WriteResponseAsync(httpContext);
+            await new JsonResult(await task).ExecuteAsync(httpContext);
         }
 
-        private static ValueTask ExecuteValueTask<T>(ValueTask<T> task, HttpContext httpContext)
+        private static Task ExecuteValueTask<T>(ValueTask<T> task, HttpContext httpContext)
         {
-            static async ValueTask ExecuteAwaited(ValueTask<T> task, HttpContext httpContext)
+            static async Task ExecuteAwaited(ValueTask<T> task, HttpContext httpContext)
             {
-                await new JsonResult(await task).WriteResponseAsync(httpContext);
+                await new JsonResult(await task).ExecuteAsync(httpContext);
             }
 
             if (task.IsCompletedSuccessfully)
             {
-                return new JsonResult(task.GetAwaiter().GetResult()).WriteResponseAsync(httpContext);
+                return new JsonResult(task.GetAwaiter().GetResult()).ExecuteAsync(httpContext);
             }
 
             return ExecuteAwaited(task, httpContext);
         }
 
-        private static ValueTask ExecuteValueTaskResult<T>(ValueTask<T> task, HttpContext httpContext) where T : IResult
+        private static Task ExecuteValueTaskResult<T>(ValueTask<T> task, HttpContext httpContext) where T : IResult
         {
-            static async ValueTask ExecuteAwaited(ValueTask<T> task, HttpContext httpContext)
+            static async Task ExecuteAwaited(ValueTask<T> task, HttpContext httpContext)
             {
-                await (await task).WriteResponseAsync(httpContext);
+                await (await task).ExecuteAsync(httpContext);
             }
 
             if (task.IsCompletedSuccessfully)
             {
-                return task.GetAwaiter().GetResult().WriteResponseAsync(httpContext);
+                return task.GetAwaiter().GetResult().ExecuteAsync(httpContext);
             }
 
             return ExecuteAwaited(task, httpContext);
@@ -362,7 +368,7 @@ namespace Microsoft.AspNetCore.Routing.MapAction
 
         private static async ValueTask ExecuteTaskResult<T>(Task<T> task, HttpContext httpContext) where T : IResult
         {
-            await (await task).WriteResponseAsync(httpContext);
+            await (await task).ExecuteAsync(httpContext);
         }
 
         /// <summary>
@@ -377,9 +383,9 @@ namespace Microsoft.AspNetCore.Routing.MapAction
                 Value = value;
             }
 
-            public ValueTask WriteResponseAsync(HttpContext httpContext)
+            public Task ExecuteAsync(HttpContext httpContext)
             {
-                return new ValueTask(httpContext.Response.WriteAsJsonAsync(Value));
+                return httpContext.Response.WriteAsJsonAsync(Value);
             }
         }
     }

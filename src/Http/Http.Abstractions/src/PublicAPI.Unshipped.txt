@@ -3,7 +3,7 @@ Microsoft.AspNetCore.Http.Api.IFromBodyAttribute
 Microsoft.AspNetCore.Http.Api.IFromRouteAttribute
 Microsoft.AspNetCore.Http.Api.IFromRouteAttribute.Name.get -> string!
 Microsoft.AspNetCore.Http.Api.IResult
-Microsoft.AspNetCore.Http.Api.IResult.WriteResponseAsync(Microsoft.AspNetCore.Http.HttpContext! httpContext) -> System.Threading.Tasks.ValueTask
+Microsoft.AspNetCore.Http.Api.IResult.ExecuteAsync(Microsoft.AspNetCore.Http.HttpContext! httpContext) -> System.Threading.Tasks.Task!
 Microsoft.AspNetCore.Mvc.Routing.IActionHttpMethodProvider
 Microsoft.AspNetCore.Mvc.Routing.IActionHttpMethodProvider.HttpMethods.get -> System.Collections.Generic.IEnumerable<string!>!
 static Microsoft.AspNetCore.Builder.UseMiddlewareExtensions.UseMiddleware(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app, System.Type! middleware, params object?[]! args) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Api;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Net.Http.Headers;
 
 namespace Microsoft.AspNetCore.Mvc
 {
@@ -89,9 +88,9 @@ namespace Microsoft.AspNetCore.Mvc
         /// </summary>
         /// <param name="httpContext">The <see cref="HttpContext"/> for the current request.</param>
         /// <returns>A task that represents the asynchronous execute operation.</returns>
-        public ValueTask WriteResponseAsync(HttpContext httpContext)
+        Task IResult.ExecuteAsync(HttpContext httpContext)
         {
-            return new ValueTask(httpContext.Response.WriteAsJsonAsync(Value));
+            return httpContext.Response.WriteAsJsonAsync(Value);
         }
     }
 }

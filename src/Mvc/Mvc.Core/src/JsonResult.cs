@@ -4,15 +4,18 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Api;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Net.Http.Headers;
 
 namespace Microsoft.AspNetCore.Mvc
 {
     /// <summary>
     /// An action result which formats the given object as JSON.
     /// </summary>
-    public class JsonResult : ActionResult, IStatusCodeActionResult
+    public class JsonResult : ActionResult, IResult, IStatusCodeActionResult
     {
         /// <summary>
         /// Creates a new <see cref="JsonResult"/> with the given <paramref name="value"/>.
@@ -79,6 +82,16 @@ namespace Microsoft.AspNetCore.Mvc
             var services = context.HttpContext.RequestServices;
             var executor = services.GetRequiredService<IActionResultExecutor<JsonResult>>();
             return executor.ExecuteAsync(context, this);
+        }
+
+        /// <summary>
+        /// Write the result as JSON to the HTTP response.
+        /// </summary>
+        /// <param name="httpContext">The <see cref="HttpContext"/> for the current request.</param>
+        /// <returns>A task that represents the asynchronous execute operation.</returns>
+        public ValueTask WriteResponseAsync(HttpContext httpContext)
+        {
+            return new ValueTask(httpContext.Response.WriteAsJsonAsync(Value));
         }
     }
 }

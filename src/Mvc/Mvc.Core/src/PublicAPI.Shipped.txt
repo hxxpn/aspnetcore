@@ -776,9 +776,9 @@ Microsoft.AspNetCore.Mvc.Routing.DynamicRouteValueTransformer.DynamicRouteValueT
 Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute
 Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute.Order.get -> int
 Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute.Order.set -> void
-Microsoft.AspNetCore.Mvc.Routing.IActionHttpMethodProvider
-Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider
-Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Order.get -> int?
+Microsoft.AspNetCore.Mvc.Routing.IActionHttpMethodProvider (forwarded, contained in Microsoft.AspNetCore.Http.Abstractions)
+Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider (forwarded, contained in Microsoft.AspNetCore.Routing)
+Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Order.get -> int? (forwarded, contained in Microsoft.AspNetCore.Routing)
 Microsoft.AspNetCore.Mvc.Routing.IRouteValueProvider
 Microsoft.AspNetCore.Mvc.Routing.IUrlHelperFactory
 Microsoft.AspNetCore.Mvc.Routing.KnownRouteValueConstraint
@@ -1841,9 +1841,9 @@ Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute.HttpMethods.get -> System.C
 Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute.Name.get -> string?
 Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute.Name.set -> void
 Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute.Template.get -> string?
-Microsoft.AspNetCore.Mvc.Routing.IActionHttpMethodProvider.HttpMethods.get -> System.Collections.Generic.IEnumerable<string!>!
-Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Name.get -> string?
-Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Template.get -> string?
+Microsoft.AspNetCore.Mvc.Routing.IActionHttpMethodProvider.HttpMethods.get -> System.Collections.Generic.IEnumerable<string!>! (forwarded, contained in Microsoft.AspNetCore.Http.Abstractions)
+Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Name.get -> string? (forwarded, contained in Microsoft.AspNetCore.Routing)
+Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Template.get -> string? (forwarded, contained in Microsoft.AspNetCore.Routing)
 Microsoft.AspNetCore.Mvc.Routing.IRouteValueProvider.RouteKey.get -> string!
 Microsoft.AspNetCore.Mvc.Routing.IRouteValueProvider.RouteValue.get -> string?
 Microsoft.AspNetCore.Mvc.Routing.IUrlHelperFactory.GetUrlHelper(Microsoft.AspNetCore.Mvc.ActionContext! context) -> Microsoft.AspNetCore.Mvc.IUrlHelper!

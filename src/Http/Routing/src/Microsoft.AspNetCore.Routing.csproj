@@ -37,4 +37,8 @@ Microsoft.AspNetCore.Routing.RouteCollection</Description>
     <Compile Include="$(SharedSourceRoot)HashCodeCombiner\*.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="MapAction\" />
+  </ItemGroup>
+
 </Project>

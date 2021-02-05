@@ -1,1 +1,7 @@
 #nullable enable
+Microsoft.AspNetCore.Builder.MapActionEndpointRouteBuilderExtensions
+Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider
+Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Name.get -> string?
+Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Order.get -> int?
+Microsoft.AspNetCore.Mvc.Routing.IRouteTemplateProvider.Template.get -> string?
+static Microsoft.AspNetCore.Builder.MapActionEndpointRouteBuilderExtensions.MapAction(this Microsoft.AspNetCore.Routing.IEndpointRouteBuilder! endpoints, System.Delegate! action) -> Microsoft.AspNetCore.Builder.IEndpointConventionBuilder!

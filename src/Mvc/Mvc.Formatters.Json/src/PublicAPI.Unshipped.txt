@@ -1,1 +1,3 @@
 #nullable enable
+~Microsoft.AspNetCore.Mvc.JsonResult.WriteResponseAsync(Microsoft.AspNetCore.Http.HttpContext httpContext) -> System.Threading.Tasks.ValueTask (forwarded, contained in Microsoft.AspNetCore.Mvc.Core)
+

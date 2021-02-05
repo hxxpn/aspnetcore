@@ -80,7 +80,7 @@ namespace Microsoft.AspNetCore.BrowserTesting
             }
 
             return AttachContextInfo(
-                browser.NewContextAsync(contextInfo.Contextualize(_browserManagerConfiguration.GetContextOptions(browserInstance))),
+                browser.NewContextAsync(contextInfo.ConfigureUniqueHarPath(_browserManagerConfiguration.GetContextOptions(browserInstance))),
                 contextInfo);
         }
 
@@ -95,7 +95,7 @@ namespace Microsoft.AspNetCore.BrowserTesting
             }
 
             return AttachContextInfo(
-                browser.NewContextAsync(contextInfo.Contextualize(_browserManagerConfiguration.GetContextOptions(browserInstance, contextName))),
+                browser.NewContextAsync(contextInfo.ConfigureUniqueHarPath(_browserManagerConfiguration.GetContextOptions(browserInstance, contextName))),
                 contextInfo);
         }
 
@@ -110,7 +110,7 @@ namespace Microsoft.AspNetCore.BrowserTesting
             }
 
             return AttachContextInfo(
-                browser.NewContextAsync(contextInfo.Contextualize(_browserManagerConfiguration.GetContextOptions(browserInstance, contextName, options))),
+                browser.NewContextAsync(contextInfo.ConfigureUniqueHarPath(_browserManagerConfiguration.GetContextOptions(browserInstance, contextName, options))),
                 contextInfo);
         }
 

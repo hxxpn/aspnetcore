@@ -37,7 +37,7 @@ namespace Microsoft.AspNetCore.BrowserTesting
             Pages.Add(args.Page, new PageInformation(args.Page, logger));
         }
 
-        internal BrowserContextOptions Contextualize(BrowserContextOptions browserContextOptions)
+        internal BrowserContextOptions ConfigureUniqueHarPath(BrowserContextOptions browserContextOptions)
         {
             if (browserContextOptions?.RecordHar?.Path != null)
             {

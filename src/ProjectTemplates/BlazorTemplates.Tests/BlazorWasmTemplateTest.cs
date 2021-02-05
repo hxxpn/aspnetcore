@@ -569,7 +569,7 @@ namespace Templates.Test
             // Clicking the counter button works
             await Task.WhenAll(
                 page.WaitForSelectorAsync("p >> text=Current count: 1"),
-                page.ClickAsync("p+button"));
+                page.ClickAsync("p+button >> text=Click me"));
 
             if (usesAuth)
             {
@@ -616,10 +616,8 @@ namespace Templates.Test
                 // Can navigate to the 'fetch data' page
                 await Task.WhenAll(
                     page.WaitForNavigationAsync("**/fetchdata"),
-                    page.WaitForSelectorAsync("text=Weather forecast"),
+                    page.WaitForSelectorAsync("h1 >> text=Weather forecast"),
                     page.ClickAsync("text=Fetch data"));
-
-                Assert.Equal("Weather forecast", await page.GetInnerTextAsync("h1"));
 
                 // Asynchronously loads and displays the table of weather forecasts
                 await page.WaitForSelectorAsync("table>tbody>tr");

@@ -191,38 +191,33 @@ namespace Templates.Test
 
         private async Task TestBasicNavigation(IPage page)
         {
-            await page.QuerySelectorAsync("ul");
+            IWebSocket socket = null;
+            await page.WaitForEventAsync(PageEvent.WebSocket, s => (socket = s.WebSocket) != null);
+            await socket.WaitForEventAsync(WebSocketEvent.FrameReceived);
+
+            await page.WaitForSelectorAsync("ul");
             // <title> element gets project ID injected into it during template execution
             Assert.Equal(Project.ProjectName.Trim(), (await page.GetTitleAsync()).Trim());
 
             // Initially displays the home page
-            Assert.Equal("Hello, world!", await page.GetTextContentAsync("h1"));
+            await page.WaitForSelectorAsync("h1 >> text=Hello, world!");
 
             // Can navigate to the counter page
-
             await Task.WhenAll(
                 page.WaitForNavigationAsync("**/counter"),
-                page.WaitForSelectorAsync("text=Current count: 0"),
-                page.ClickAsync("text=Counter"));
-
-            Assert.Equal("Counter", await page.GetTextContentAsync("h1"));
+                page.WaitForSelectorAsync("h1+p >> text=Current count: 0"),
+                page.ClickAsync("a[href=counter] >> text=Counter"));
 
             // Clicking the counter button works
-            Assert.Equal("Current count: 0", await page.GetTextContentAsync("h1+p"));
-            await page.WaitForTimeoutAsync(1000);
             await Task.WhenAll(
-                page.WaitForSelectorAsync("text=Current count: 1"),
-                page.ClickAsync("p+button"));
-
-            Assert.Equal("Current count: 1", await page.GetTextContentAsync("h1+p"));
+                page.WaitForSelectorAsync("h1+p >> text=Current count: 1"),
+                page.ClickAsync("p+button >> text=Click me"));
 
             // Can navigate to the 'fetch data' page
             await Task.WhenAll(
                 page.WaitForNavigationAsync("**/fetchdata"),
-                page.WaitForSelectorAsync("text=Weather forecast"),
-                page.ClickAsync("text=Fetch data"));
-
-            Assert.Equal("Weather forecast", await page.GetTextContentAsync("h1"));
+                page.WaitForSelectorAsync("h1 >> text=Weather forecast"),
+                page.ClickAsync("a[href=fetchdata] >> text=Fetch data"));
 
             // Asynchronously loads and displays the table of weather forecasts
             await page.WaitForSelectorAsync("table>tbody>tr");

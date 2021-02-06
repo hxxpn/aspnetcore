@@ -79,7 +79,7 @@ namespace Microsoft.AspNetCore.Builder
         {
             var httpMethods = methodInfo
                 .GetCustomAttributes()
-                .OfType<IActionHttpMethodProvider>()
+                .OfType<IHttpMethodMetadata>()
                 .SelectMany(a => a.HttpMethods)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();

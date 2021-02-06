@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Api;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Internal;
 
 namespace Microsoft.AspNetCore.Routing.MapAction
 {

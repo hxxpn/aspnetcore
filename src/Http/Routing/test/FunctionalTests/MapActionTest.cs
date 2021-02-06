@@ -24,7 +24,7 @@ namespace Microsoft.AspNetCore.Routing.FunctionalTests
         [Fact]
         public async Task MapAction_FromBodyWorksWithJsonPayload()
         {
-            [HttpPost("/EchoTodo")]
+            [HttpMethods(new[] { "POST" }, "/EchoTodo")]
             Todo EchoTodo([FromBody] Todo todo) => todo;
 
             using var host = new HostBuilder()
@@ -51,7 +51,7 @@ namespace Microsoft.AspNetCore.Routing.FunctionalTests
 
             var todo = new Todo
             {
-                Name = "Custom Todo"
+                Name = "Write tests!"
             };
 
             var response = await client.PostAsJsonAsync("/EchoTodo", todo);
@@ -71,16 +71,17 @@ namespace Microsoft.AspNetCore.Routing.FunctionalTests
 
         private class FromBodyAttribute : Attribute, IFromBodyMetadata { }
 
-        private class HttpPostAttribute : Attribute, IRouteTemplateProvider, IHttpMethodMetadata
+        private class HttpMethodsAttribute : Attribute, IRouteTemplateProvider, IHttpMethodMetadata
         {
-            public HttpPostAttribute(string template)
+            public HttpMethodsAttribute(string[] httpMethods, string? template)
             {
+                HttpMethods = httpMethods;
                 Template = template;
             }
 
-            public string Template { get; }
+            public string? Template { get; }
 
-            public IReadOnlyList<string> HttpMethods { get; } = new[] { "POST" };
+            public IReadOnlyList<string> HttpMethods { get; }
 
             public int? Order => null;
 

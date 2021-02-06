@@ -37,7 +37,6 @@ namespace Microsoft.AspNetCore.Builder
             }
 
             var requestDelegate = MapActionExpressionTreeBuilder.BuildRequestDelegate(action);
-            var httpMethodMetadata = GenerateHtpMethodMetadata(action.Method);
 
             var routeAttributes = action.Method.GetCustomAttributes().OfType<IRouteTemplateProvider>();
             var conventionBuilders = new List<IEndpointConventionBuilder>();
@@ -57,11 +56,6 @@ namespace Microsoft.AspNetCore.Builder
                     {
                         endpointBuilder.Metadata.Add(attribute);
                     }
-
-                    if (httpMethodMetadata is not null)
-                    {
-                        endpointBuilder.Metadata.Add(httpMethodMetadata);
-                    }
                 });
 
                 conventionBuilders.Add(conventionBuilder);
@@ -73,23 +67,6 @@ namespace Microsoft.AspNetCore.Builder
             }
 
             return new CompositeEndpointConventionBuilder(conventionBuilders);
-        }
-
-        private static HttpMethodMetadata? GenerateHtpMethodMetadata(MethodInfo methodInfo)
-        {
-            var httpMethods = methodInfo
-                .GetCustomAttributes()
-                .OfType<IHttpMethodMetadata>()
-                .SelectMany(a => a.HttpMethods)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            if (httpMethods.Length == 0)
-            {
-                return null;
-            }
-
-            return new HttpMethodMetadata(httpMethods);
         }
 
         private class CompositeEndpointConventionBuilder : IEndpointConventionBuilder

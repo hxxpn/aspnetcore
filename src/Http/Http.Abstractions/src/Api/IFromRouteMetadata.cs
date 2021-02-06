@@ -6,7 +6,7 @@ namespace Microsoft.AspNetCore.Http.Api
     /// <summary>
     /// Interface marking attributes that specify a parameter or property should be bound using route-data from the current request.
     /// </summary>
-    public interface IFromRouteAttribute
+    public interface IFromRouteMetadata
     {
         /// <summary>
         /// The <see cref="HttpRequest.RouteValues"/> name.

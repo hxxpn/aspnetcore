@@ -11,7 +11,7 @@ namespace Microsoft.AspNetCore.Mvc
     /// Specifies that a parameter or property should be bound using the request body.
     /// </summary>
     [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-    public class FromBodyAttribute : Attribute, IBindingSourceMetadata, IConfigureEmptyBodyBehavior, IFromBodyAttribute
+    public class FromBodyAttribute : Attribute, IBindingSourceMetadata, IConfigureEmptyBodyBehavior, IFromBodyMetadata
     {
         /// <inheritdoc />
         public BindingSource BindingSource => BindingSource.Body;

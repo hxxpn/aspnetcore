@@ -1,7 +1,7 @@
 #nullable enable
-Microsoft.AspNetCore.Http.Api.IFromBodyAttribute
-Microsoft.AspNetCore.Http.Api.IFromRouteAttribute
-Microsoft.AspNetCore.Http.Api.IFromRouteAttribute.Name.get -> string!
+Microsoft.AspNetCore.Http.Api.IFromBodyMetadata
+Microsoft.AspNetCore.Http.Api.IFromRouteMetadata
+Microsoft.AspNetCore.Http.Api.IFromRouteMetadata.Name.get -> string!
 Microsoft.AspNetCore.Http.Api.IResult
 Microsoft.AspNetCore.Http.Api.IResult.ExecuteAsync(Microsoft.AspNetCore.Http.HttpContext! httpContext) -> System.Threading.Tasks.Task!
 static Microsoft.AspNetCore.Builder.UseMiddlewareExtensions.UseMiddleware(this Microsoft.AspNetCore.Builder.IApplicationBuilder! app, System.Type! middleware, params object?[]! args) -> Microsoft.AspNetCore.Builder.IApplicationBuilder!

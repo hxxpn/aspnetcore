@@ -102,7 +102,7 @@ namespace Microsoft.AspNetCore.Routing.MapAction
                 //    paramterExpression = BindParamenter(formProperty, parameter, parameter.FromForm);
                 //}
                 //else if (parameter.FromBody)
-                if (parameter.CustomAttributes.Any(a => typeof(IFromBodyAttribute).IsAssignableFrom(a.AttributeType)))
+                if (parameter.CustomAttributes.Any(a => typeof(IFromBodyMetadata).IsAssignableFrom(a.AttributeType)))
                 {
                     if (needBody)
                     {

@@ -6,7 +6,7 @@ namespace Microsoft.AspNetCore.Http.Api
     /// <summary>
     /// Interface marking attributes that specify a parameter or property should be bound using the request body.
     /// </summary>
-    public interface IFromBodyAttribute
+    public interface IFromBodyMetadata
     {
     }
 }

@@ -30,6 +30,7 @@ InProcessApplicationBase::StopInternal(bool fServerInitiated)
         // We don't actually handle any shutdown logic here.
         // Instead, we notify IIS that the process needs to be recycled, which will call
         // ApplicationManager->Shutdown(). This will call shutdown on the application.
+        LOG_INFO(L"Recycling process NOW");
         m_pHttpServer.RecycleProcess(L"AspNetCore InProcess Recycle Process on Demand");
     }
     else

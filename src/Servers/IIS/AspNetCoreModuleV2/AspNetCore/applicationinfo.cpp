@@ -20,6 +20,7 @@
 #include "file_utility.h"
 
 extern HINSTANCE           g_hServerModule;
+extern BOOL         g_fInShutdown;
 
 HRESULT
 APPLICATION_INFO::CreateHandler(
@@ -32,10 +33,11 @@ APPLICATION_INFO::CreateHandler(
     {
         SRWSharedLock lock(m_applicationLock);
 
-        RETURN_IF_FAILED(hr = TryCreateHandler(pHttpContext, pHandler));
+        hr = TryCreateHandler(pHttpContext, pHandler);
 
         if (hr == S_OK)
         {
+            LOG_INFO(L"Created handler from application");
             return S_OK;
         }
     }
@@ -44,7 +46,7 @@ APPLICATION_INFO::CreateHandler(
         SRWExclusiveLock lock(m_applicationLock);
 
         // check if other thread created application
-        RETURN_IF_FAILED(hr = TryCreateHandler(pHttpContext, pHandler));
+        hr = TryCreateHandler(pHttpContext, pHandler);
 
         // In some cases (adding and removing app_offline quickly) application might start and stop immediately
         // so retry until we get valid handler or error
@@ -62,6 +64,7 @@ APPLICATION_INFO::CreateHandler(
                 m_pApplicationFactory = nullptr;
             }
 
+            LOG_INFO(L"Calling create application");
             RETURN_IF_FAILED(CreateApplication(pHttpContext));
 
             RETURN_IF_FAILED(hr = TryCreateHandler(pHttpContext, pHandler));
@@ -75,7 +78,7 @@ HRESULT
 APPLICATION_INFO::CreateApplication(IHttpContext& pHttpContext)
 {
     auto& pHttpApplication = *pHttpContext.GetApplication();
-    if (AppOfflineApplication::ShouldBeStarted(pHttpApplication))
+    if (AppOfflineApplication::ShouldBeStarted(pHttpApplication) || g_fInShutdown)
     {
         LOG_INFO(L"Detected app_offline file, creating polling application");
         m_pApplication = make_application<AppOfflineApplication>(pHttpApplication);
@@ -92,7 +95,6 @@ APPLICATION_INFO::CreateApplication(IHttpContext& pHttpContext)
             ErrorContext errorContext;
             errorContext.statusCode = 500i16;
             errorContext.subStatusCode = 0i16;
-
 
             const auto hr = TryCreateApplication(pHttpContext, options, errorContext);
 
@@ -135,10 +137,11 @@ APPLICATION_INFO::CreateApplication(IHttpContext& pHttpContext)
         }
         catch (...)
         {
+            OBSERVE_CAUGHT_EXCEPTION();
             EventLog::Error(
                 ASPNETCORE_CONFIGURATION_LOAD_ERROR,
                 ASPNETCORE_CONFIGURATION_LOAD_ERROR_MSG,
-                L"");
+                L"Create Application");
         }
 
         m_pApplication = make_application<ServerErrorApplication>(
@@ -202,15 +205,16 @@ APPLICATION_INFO::TryCreateApplication(IHttpContext& pHttpContext, const ShimOpt
                 {
                     // TODO maybe able to read last directory in directory iteration?
                     std::string::size_type sz;
-                    int i_dec = std::stoi(entry.path(), &sz);
+                    int i_dec = std::stoi(entry.path().filename().string(), &sz);
                     if (i_dec > directoryName)
                     {
                         directoryName = i_dec;
                         directoryNameStr = std::string(entry.path().string());
                     }
                 }
-                catch (const std::exception&)
+                catch (...)
                 {
+                    OBSERVE_CAUGHT_EXCEPTION();
                     // Ignore any folders that can't be converted to an int.
                 }
             }
@@ -220,7 +224,7 @@ APPLICATION_INFO::TryCreateApplication(IHttpContext& pHttpContext, const ShimOpt
         shadowCopyPath = shadowCopyPath / std::filesystem::path(directoryNameStr);
         RETURN_IF_FAILED(Environment::CopyToDirectory(shadowCopyPath, physicalPath, options.QueryCleanShadowCopyDirectory()));
     }
-   
+
     RETURN_IF_FAILED(m_handlerResolver.GetApplicationFactory(*pHttpContext.GetApplication(), shadowCopyPath, m_pApplicationFactory, options, error));
     LOG_INFO(L"Creating handler application");
 
@@ -245,6 +249,7 @@ APPLICATION_INFO::TryCreateHandler(
         IREQUEST_HANDLER * newHandler;
         const auto result = m_pApplication->TryCreateHandler(&pHttpContext, &newHandler);
         RETURN_IF_FAILED(result);
+        LOG_INFO(L"Created handler");
 
         if (result == S_OK)
         {
@@ -252,6 +257,10 @@ APPLICATION_INFO::TryCreateHandler(
             // another thread created the application
             return S_OK;
         }
+    }
+    else
+    {
+        LOG_INFO(L"No Handler, no app");
     }
     return S_FALSE;
 }
@@ -265,6 +274,7 @@ APPLICATION_INFO::ShutDownApplication(bool fServerInitiated)
     {
         LOG_INFOF(L"Stopping application '%ls'", QueryApplicationInfoKey().c_str());
         m_pApplication->Stop(fServerInitiated);
+        LOG_INFO(L"Setting app to null");
         m_pApplication = nullptr;
         m_pApplicationFactory = nullptr;
     }

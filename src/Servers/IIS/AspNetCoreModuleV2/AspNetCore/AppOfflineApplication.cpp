@@ -11,6 +11,7 @@ HRESULT AppOfflineApplication::CreateHandler(IHttpContext* pHttpContext, IREQUES
 {
     try
     {
+        LOG_INFO(L"AppOfflineApp CreateHandler");
         auto handler = std::make_unique<AppOfflineHandler>(*pHttpContext, m_strAppOfflineContent);
         *pRequestHandler = handler.release();
     }

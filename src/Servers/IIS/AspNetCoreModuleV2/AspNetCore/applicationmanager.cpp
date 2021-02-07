@@ -116,6 +116,11 @@ APPLICATION_MANAGER::RecycleApplicationFromManager(
                 }
             }
 
+            if (m_handlerResolver.GetHostingModel() == APP_HOSTING_MODEL::HOSTING_IN_PROCESS)
+            {
+                g_fInShutdown = true;
+            }
+
             // All applications were unloaded reset handler resolver validation logic
             if (m_pApplicationInfoHash.empty())
             {

@@ -49,6 +49,7 @@ void FILE_WATCHER::WaitForMonitor(DWORD dwRetryCounter)
             {
                 // fail to get thread status
                 // call terminitethread
+                LOG_INFO(L"BAD");
                 TerminateThread(m_hChangeNotificationThread, 1);
                 m_fThreadExit = TRUE;
             }
@@ -57,6 +58,7 @@ void FILE_WATCHER::WaitForMonitor(DWORD dwRetryCounter)
 
         if (!m_fThreadExit)
         {
+            LOG_INFO(L"BAD");
             TerminateThread(m_hChangeNotificationThread, 1);
         }
     }
@@ -337,9 +339,7 @@ FILE_WATCHER::TimerCallback(
 
 DWORD WINAPI FILE_WATCHER::CopyAndShutdown(LPVOID arg)
 {
-    EventLog::Error(
-        1,
-        L"Callback");
+    LOG_INFO(L"Start copy and shutdown");
     auto directoryName = 0;
     // wrong path.
     auto watcher = (FILE_WATCHER*)arg;
@@ -365,8 +365,10 @@ DWORD WINAPI FILE_WATCHER::CopyAndShutdown(LPVOID arg)
 
     watcher->_pApplication->ReferenceApplication();
     SetEvent(watcher->m_pShutdownEvent);
-   
+
     QueueUserWorkItem(RunNotificationCallback, watcher->_pApplication.get(), WT_EXECUTEDEFAULT);
+
+    LOG_INFO(L"End copy and shutdown");
     return 0;
 }
 
@@ -423,6 +425,8 @@ FILE_WATCHER::StopMonitor()
         return;
     }
 
+    LOG_INFO(L"Stop monitor");
+
     InterlockedExchange(&_lStopMonitorCalled, 1);
     // signal the file watch thread to exit
     PostQueuedCompletionStatus(m_hCompletionPort, 0, FILE_WATCHER_SHUTDOWN_KEY, NULL);
@@ -435,4 +439,6 @@ FILE_WATCHER::StopMonitor()
 
     // Release application reference
     _pApplication.reset(nullptr);
+
+    LOG_INFO(L"End stop monitor");
 }

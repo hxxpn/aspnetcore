@@ -18,6 +18,7 @@ public:
     HandlerResolver(HMODULE hModule, const IHttpServer &pServer);
     HRESULT GetApplicationFactory(const IHttpApplication &pApplication, std::filesystem::path shadowCopyPath, std::unique_ptr<ApplicationFactory>& pApplicationFactory, const ShimOptions& options, ErrorContext& errorContext);
     void ResetHostingModel();
+    APP_HOSTING_MODEL GetHostingModel();
 
 private:
     HRESULT LoadRequestHandlerAssembly(const IHttpApplication &pApplication, std::filesystem::path shadowCopyPath, const ShimOptions& pConfiguration, std::unique_ptr<ApplicationFactory>& pApplicationFactory, ErrorContext& errorContext);

@@ -33,6 +33,7 @@ public:
 
     HRESULT CreateHandler(IHttpContext* pHttpContext, IREQUEST_HANDLER** pRequestHandler)
     {
+        LOG_INFO(L"StartupException CreateHandler");
         *pRequestHandler = new ServerErrorHandler(*pHttpContext, m_statusCode, m_subStatusCode, m_statusText, m_HR, m_disableLogs, m_error);
 
         return S_OK;

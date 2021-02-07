@@ -40,6 +40,7 @@ public:
 
     HRESULT CreateHandler(IHttpContext * pHttpContext, IREQUEST_HANDLER ** pRequestHandler) override
     {
+        LOG_INFO(L"ShuttingDown CreateHandler");
         *pRequestHandler = new ShuttingDownHandler(pHttpContext);
         return S_OK;
     }

@@ -182,6 +182,13 @@ void HandlerResolver::ResetHostingModel()
     m_loadedApplicationId.resize(0);
 }
 
+APP_HOSTING_MODEL HandlerResolver::GetHostingModel()
+{
+    SRWExclusiveLock lock(m_requestHandlerLoadLock);
+
+    return m_loadedApplicationHostingModel;
+}
+
 HRESULT
 HandlerResolver::FindNativeAssemblyFromGlobalLocation(
     const ShimOptions& pConfiguration,

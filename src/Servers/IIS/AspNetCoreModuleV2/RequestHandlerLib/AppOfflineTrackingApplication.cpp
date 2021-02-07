@@ -25,13 +25,15 @@ HRESULT AppOfflineTrackingApplication::StartMonitoringAppOffline()
 
 void AppOfflineTrackingApplication::StopInternal(bool fServerInitiated)
 {
-    APPLICATION::StopInternal(fServerInitiated);
+    LOG_INFO(L"Stop Internal AppOfflineTracking");
 
     if (m_fileWatcher)
     {
         m_fileWatcher->StopMonitor();
         m_fileWatcher = nullptr;
     }
+
+    APPLICATION::StopInternal(fServerInitiated);
 }
 
 HRESULT AppOfflineTrackingApplication::StartMonitoringAppOflineImpl()

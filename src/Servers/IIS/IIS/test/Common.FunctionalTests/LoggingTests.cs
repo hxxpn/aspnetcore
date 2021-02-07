@@ -137,7 +137,7 @@ namespace Microsoft.AspNetCore.Server.IIS.FunctionalTests
         }
 
         [ConditionalTheory]
-        [MaximumOSVersion(OperatingSystems.Windows, WindowsVersions.Win10_20H1, SkipReason = "Shutdown hangs https://github.com/dotnet/aspnetcore/issues/25107")]
+        //[MaximumOSVersion(OperatingSystems.Windows, WindowsVersions.Win10_20H1, SkipReason = "Shutdown hangs https://github.com/dotnet/aspnetcore/issues/25107")]
         [RequiresIIS(IISCapability.PoolEnvironmentVariables)]
         [MemberData(nameof(InprocessTestVariants))]
         public async Task StartupMessagesLogFileSwitchedWhenLogFilePresentInWebConfig(TestVariant variant)

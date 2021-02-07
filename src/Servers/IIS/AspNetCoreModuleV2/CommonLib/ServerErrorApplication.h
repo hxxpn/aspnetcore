@@ -24,6 +24,7 @@ public:
 
     HRESULT CreateHandler(IHttpContext *pHttpContext, IREQUEST_HANDLER ** pRequestHandler) override
     {
+        LOG_INFO(L"Server error");
         *pRequestHandler = std::make_unique<ServerErrorHandler>(*pHttpContext, m_statusCode, m_subStatusCode, m_statusText, m_HR, m_disableStartupPage, m_responseContent).release();
 
         return S_OK;

@@ -50,6 +50,7 @@ IN_PROCESS_APPLICATION::~IN_PROCESS_APPLICATION()
 VOID
 IN_PROCESS_APPLICATION::StopInternal(bool fServerInitiated)
 {
+    AppOfflineTrackingApplication::StopInternal(fServerInitiated);
     StopClr();
     InProcessApplicationBase::StopInternal(fServerInitiated);
 }
@@ -582,7 +583,7 @@ IN_PROCESS_APPLICATION::CreateHandler(
     try
     {
         SRWSharedLock dataLock(m_dataLock);
-
+        LOG_INFO(L"Creating handler inprocessapplication");
         DBG_ASSERT(!m_fStopCalled);
         m_requestCount++;
 

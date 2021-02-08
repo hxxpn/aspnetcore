@@ -13,3 +13,7 @@ Microsoft.AspNetCore.Components.Forms.InputText.Element.get -> Microsoft.AspNetC
 Microsoft.AspNetCore.Components.Forms.InputText.Element.set -> void
 Microsoft.AspNetCore.Components.Forms.InputTextArea.Element.get -> Microsoft.AspNetCore.Components.ElementReference?
 Microsoft.AspNetCore.Components.Forms.InputTextArea.Element.set -> void
+Microsoft.AspNetCore.Components.RenderTree.WebEventDescriptor.EventName.get -> string!
+Microsoft.AspNetCore.Components.RenderTree.WebEventDescriptor.EventName.set -> void
+*REMOVED*Microsoft.AspNetCore.Components.RenderTree.WebEventDescriptor.EventArgsType.get -> string!
+*REMOVED*Microsoft.AspNetCore.Components.RenderTree.WebEventDescriptor.EventArgsType.set -> void

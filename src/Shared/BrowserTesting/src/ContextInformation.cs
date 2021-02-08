@@ -34,7 +34,20 @@ namespace Microsoft.AspNetCore.BrowserTesting
                 logger.LogInformation($"Network trace will be saved at '{_harPath}'");
             }
 
-            Pages.Add(args.Page, new PageInformation(args.Page, logger));
+            var pageInfo = new PageInformation(args.Page, logger);
+            Pages.Add(args.Page, pageInfo);
+            args.Page.Close += CleanupPage;
+            args.Page.Crash += CleanupPage;
+        }
+
+        private void CleanupPage(object sender, EventArgs e)
+        {
+            var page = (IPage)sender;
+            if (Pages.TryGetValue(page, out var info))
+            {
+                info.Dispose();
+                Pages.Remove(page);
+            }
         }
 
         internal BrowserContextOptions ConfigureUniqueHarPath(BrowserContextOptions browserContextOptions)

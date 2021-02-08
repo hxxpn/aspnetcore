@@ -191,8 +191,9 @@ namespace Templates.Test
 
         private async Task TestBasicNavigation(IPage page)
         {
-            IWebSocket socket = null;
-            await page.WaitForEventAsync(PageEvent.WebSocket, s => (socket = s.WebSocket) != null);
+            var socket = BrowserContextInfo.Pages[page].WebSockets.SingleOrDefault() ??
+                (await page.WaitForEventAsync(PageEvent.WebSocket)).WebSocket;
+
             await socket.WaitForEventAsync(WebSocketEvent.FrameReceived);
 
             await page.WaitForSelectorAsync("ul");
@@ -210,6 +211,7 @@ namespace Templates.Test
 
             // Clicking the counter button works
             await Task.WhenAll(
+                socket.WaitForEventAsync(WebSocketEvent.FrameReceived),
                 page.WaitForSelectorAsync("h1+p >> text=Current count: 1"),
                 page.ClickAsync("p+button >> text=Click me"));
 

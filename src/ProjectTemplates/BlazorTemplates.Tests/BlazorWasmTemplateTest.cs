@@ -24,19 +24,20 @@ using Xunit.Abstractions;
 
 namespace Templates.Test
 {
-    public class BlazorWasmTemplateTest
+    public class BlazorWasmTemplateTest : BlazorTemplateTest
     {
         public BlazorWasmTemplateTest(ProjectFactoryFixture projectFactory, PlaywrightFixture<BlazorServerTemplateTest> browserFixture, ITestOutputHelper output)
+            : base(browserFixture)
         {
             ProjectFactory = projectFactory;
-            Fixture = browserFixture;
             Output = output;
-            BrowserContextInfo = new ContextInformation(TestHelpers.CreateFactory(output));
+            BrowserContextInfo = new ContextInformation(CreateFactory(output));
         }
 
         public ProjectFactoryFixture ProjectFactory { get; set; }
-        public PlaywrightFixture<BlazorServerTemplateTest> Fixture { get; }
+
         public ITestOutputHelper Output { get; }
+
         public ContextInformation BrowserContextInfo { get; }
 
         [Theory]
@@ -75,12 +76,7 @@ namespace Templates.Test
                 }
                 else
                 {
-                    Assert.False(
-                        TestHelpers.TryValidateBrowserRequired(
-                            browserKind,
-                            isRequired: !Fixture.BrowserManager.IsExplicitlyDisabled(browserKind),
-                            out var errorMessage),
-                        errorMessage);
+                    EnsureBrowserAvailable(browserKind);
                 }
             }
         }
@@ -130,12 +126,7 @@ namespace Templates.Test
             }
             else
             {
-                Assert.False(
-                    TestHelpers.TryValidateBrowserRequired(
-                        browserKind,
-                        isRequired: !Fixture.BrowserManager.IsExplicitlyDisabled(browserKind),
-                        out var errorMessage),
-                    errorMessage);
+                EnsureBrowserAvailable(browserKind);
             }
         }
 
@@ -198,12 +189,7 @@ namespace Templates.Test
             }
             else
             {
-                Assert.False(
-                    TestHelpers.TryValidateBrowserRequired(
-                        browserKind,
-                        isRequired: !Fixture.BrowserManager.IsExplicitlyDisabled(browserKind),
-                        out var errorMessage),
-                    errorMessage);
+                EnsureBrowserAvailable(browserKind);
             }
         }
 
@@ -261,12 +247,7 @@ namespace Templates.Test
             }
             else
             {
-                Assert.False(
-                    TestHelpers.TryValidateBrowserRequired(
-                        browserKind,
-                        isRequired: !Fixture.BrowserManager.IsExplicitlyDisabled(browserKind),
-                        out var errorMessage),
-                    errorMessage);
+                EnsureBrowserAvailable(browserKind);
             }
         }
 
@@ -375,12 +356,7 @@ namespace Templates.Test
             }
             else
             {
-                Assert.False(
-                    TestHelpers.TryValidateBrowserRequired(
-                        browserKind,
-                        isRequired: !Fixture.BrowserManager.IsExplicitlyDisabled(browserKind),
-                        out var errorMessage),
-                    errorMessage);
+                EnsureBrowserAvailable(browserKind);
             }
         }
 
@@ -540,12 +516,7 @@ namespace Templates.Test
             }
             else
             {
-                Assert.False(
-                    TestHelpers.TryValidateBrowserRequired(
-                        browserKind,
-                        isRequired: !Fixture.BrowserManager.IsExplicitlyDisabled(browserKind),
-                        out var errorMessage),
-                    errorMessage);
+                EnsureBrowserAvailable(browserKind);
             }
         }
 

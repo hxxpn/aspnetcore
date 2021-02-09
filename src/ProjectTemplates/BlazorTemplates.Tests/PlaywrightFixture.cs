@@ -34,9 +34,14 @@ namespace ProjectTemplates.Tests.Infrastructure
         private IConfiguration CreateConfiguration(Assembly assembly)
         {
             var basePath = Path.GetDirectoryName(assembly.Location);
-            var os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win" :
-                RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux" :
-                RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "osx" : null;
+            var os = Environment.OSVersion.Platform switch
+            {
+                PlatformID.Win32NT => "win",
+                PlatformID.Unix => "linux",
+                PlatformID.MacOSX => "osx",
+                _ => null
+            };
+
             var builder = new ConfigurationBuilder()
                 .AddJsonFile(Path.Combine(basePath, "playwrightSettings.json"))
                 .AddJsonFile(Path.Combine(basePath, $"playwrightSettings.{os}.json"), optional: true);

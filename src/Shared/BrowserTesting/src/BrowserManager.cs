@@ -15,7 +15,7 @@ namespace Microsoft.AspNetCore.BrowserTesting
     public class BrowserManager
     {
         private readonly BrowserManagerConfiguration _browserManagerConfiguration;
-        private readonly Dictionary<string, IBrowser> _launchBrowsers = new();
+        private readonly Dictionary<string, IBrowser> _launchBrowsers = new(StringComparer.Ordinal);
 
         private object _lock = new();
         private Task _initializeTask;

@@ -5,12 +5,22 @@ using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.BrowserTesting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
+using ProjectTemplates.Tests.Infrastructure;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Templates.Test
 {
-    public static class TestHelpers
+    public class BlazorTemplateTest
     {
+        public BlazorTemplateTest(PlaywrightFixture<BlazorServerTemplateTest> browserFixture)
+        {
+            Fixture = browserFixture;
+        }
+
+        public PlaywrightFixture<BlazorServerTemplateTest> Fixture { get; }
+
+
         public static ILoggerFactory CreateFactory(ITestOutputHelper output)
         {
             var testSink = new TestSink();
@@ -40,6 +50,16 @@ namespace Templates.Test
         {
             error = !isRequired ? null : $"Browser '{browserKind}' is required but not configured on '{RuntimeInformation.OSDescription}'";
             return isRequired;
+        }
+
+        protected void EnsureBrowserAvailable(BrowserKind browserKind)
+        {
+            Assert.False(
+                TryValidateBrowserRequired(
+                    browserKind,
+                    isRequired: !Fixture.BrowserManager.IsExplicitlyDisabled(browserKind),
+                    out var errorMessage),
+                errorMessage);
         }
     }
 }

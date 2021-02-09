@@ -4,7 +4,7 @@ interface EventTypeOptions {
 }
 
 const eventTypeRegistry: Map<string, EventTypeOptions> = new Map();
-const browserEventNamesByDotNetName: Map<string, string[]> = new Map();
+const browserEventNameToDotNetEventNames: Map<string, string[]> = new Map();
 const emptyEventArgsOptions: EventTypeOptions = {};
 
 export function registerCustomEventType(dotNetEventName: string, options: EventTypeOptions): void {
@@ -20,10 +20,11 @@ export function registerCustomEventType(dotNetEventName: string, options: EventT
 
   eventTypeRegistry.set(dotNetEventName, options);
 
-  if (!browserEventNamesByDotNetName.has(dotNetEventName)) {
-    browserEventNamesByDotNetName.set(dotNetEventName, []);
+  const browserEventName = options.browserEventName || dotNetEventName;
+  if (!browserEventNameToDotNetEventNames.has(browserEventName)) {
+    browserEventNameToDotNetEventNames.set(browserEventName, []);
   }
-  browserEventNamesByDotNetName.get(dotNetEventName)?.push(options.browserEventName || dotNetEventName);
+  browserEventNameToDotNetEventNames.get(browserEventName)?.push(dotNetEventName);
 }
 
 export function getEventTypeOptions(dotNetEventName: string): EventTypeOptions {
@@ -39,11 +40,13 @@ export function getBrowserEventName(dotNetEventName: string): string {
 export function getDotNetEventNames(browserEventName: string): string[] {
   // For back-compat, it's possible to use a custom event name without registering it.
   // In this case, we assume the dotnet name and browser name are the same.
-  return browserEventNamesByDotNetName.get(browserEventName) ?? [browserEventName];
+  return browserEventNameToDotNetEventNames.get(browserEventName) ?? [browserEventName];
 }
 
 function registerBuiltInEventType(dotNetEventNames: string[], options: EventTypeOptions) {
-  dotNetEventNames.forEach(dotNetEventName => eventTypeRegistry.set(dotNetEventName, options));
+  dotNetEventNames.forEach(dotNetEventName => {
+    registerCustomEventType(dotNetEventName, options);
+  });
 }
 
 registerBuiltInEventType(['input', 'change'], {

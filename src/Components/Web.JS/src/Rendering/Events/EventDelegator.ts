@@ -107,13 +107,17 @@ export class EventDelegator {
     // Scan up the element hierarchy, looking for any matching registered event handlers
     let candidateElement = evt.target as Element | null;
     let eventArgsByDotNetEventName: { [dotNetEventName: string]: any } | null = null; // Populate lazily
+    let dotNetEventNames: string[] | null = null; // Populate lazily
     const browserEventName = evt.type;
     const eventIsNonBubbling = nonBubblingBrowserEventNames.hasOwnProperty(browserEventName);
     let stopPropagationWasRequested = false;
     while (candidateElement) {
       const handlerInfos = this.getEventHandlerInfosForElement(candidateElement, false);
       if (handlerInfos) {
-        const dotNetEventNames: string[] = getDotNetEventNames(browserEventName);
+        if (dotNetEventNames === null) {
+          dotNetEventNames = getDotNetEventNames(browserEventName);
+        }
+
         dotNetEventNames.forEach(dotNetEventName => {
           const handlerInfo = handlerInfos.getHandler(dotNetEventName);
           if (handlerInfo && !eventIsDisabledOnElement(candidateElement!, browserEventName)) {

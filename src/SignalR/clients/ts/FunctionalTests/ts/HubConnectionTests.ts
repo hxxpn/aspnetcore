@@ -683,7 +683,11 @@ describe("hubConnection", () => {
             await testClient.pollPromise;
             await stopPromise;
         } catch (e) {
-            fail(e);
+            if ((e as Error).message === "An abort occurred.") {
+                // Poll request may have been aborted
+            } else {
+                fail(e);
+            }
         } finally {
             done();
         }

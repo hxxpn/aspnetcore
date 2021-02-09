@@ -88,4 +88,9 @@ Later on, this will be checked using this condition:
       Microsoft.AspNetCore.Server.Kestrel.Core;
     </PackagesInPatch>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(VersionPrefix)' == '2.1.26' ">
+    <PackagesInPatch>
+      @aspnet/signalr-protocol-msgpack;
+    </PackagesInPatch>
+  </PropertyGroup>
 </Project>

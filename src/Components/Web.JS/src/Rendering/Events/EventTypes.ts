@@ -4,28 +4,46 @@ interface EventTypeOptions {
 }
 
 const eventTypeRegistry: Map<string, EventTypeOptions> = new Map();
+const browserEventNamesByDotNetName: Map<string, string[]> = new Map();
 const emptyEventArgsOptions: EventTypeOptions = {};
 
-export function registerCustomEventType(eventName: string, options: EventTypeOptions): void {
+export function registerCustomEventType(dotNetEventName: string, options: EventTypeOptions): void {
   if (!options) {
     throw new Error('The options parameter is required.');
   }
 
   // There can't be more than one registration for the same event name because then we wouldn't
   // know which eventargs data to supply.
-  if (eventTypeRegistry.has(eventName)) {
-    throw new Error(`The event '${eventName}' is already registered.`);
+  if (eventTypeRegistry.has(dotNetEventName)) {
+    throw new Error(`The event '${dotNetEventName}' is already registered.`);
   }
 
-  eventTypeRegistry.set(eventName, options);
+  eventTypeRegistry.set(dotNetEventName, options);
+
+  if (!browserEventNamesByDotNetName.has(dotNetEventName)) {
+    browserEventNamesByDotNetName.set(dotNetEventName, []);
+  }
+  browserEventNamesByDotNetName.get(dotNetEventName)?.push(options.browserEventName || dotNetEventName);
 }
 
-export function getEventTypeOptions(eventName: string): EventTypeOptions {
-  return eventTypeRegistry.get(eventName) || emptyEventArgsOptions;
+export function getEventTypeOptions(dotNetEventName: string): EventTypeOptions {
+  return eventTypeRegistry.get(dotNetEventName) || emptyEventArgsOptions;
 }
 
-function registerBuiltInEventType(eventNames: string[], options: EventTypeOptions) {
-  eventNames.forEach(eventName => eventTypeRegistry.set(eventName, options));
+export function getBrowserEventName(dotNetEventName: string): string {
+  // For back-compat, it's possible to use a custom event name without registering it.
+  // In this case, we assume the dotnet name and browser name are the same.
+  return eventTypeRegistry.get(dotNetEventName)?.browserEventName ?? dotNetEventName;
+}
+
+export function getDotNetEventNames(browserEventName: string): string[] {
+  // For back-compat, it's possible to use a custom event name without registering it.
+  // In this case, we assume the dotnet name and browser name are the same.
+  return browserEventNamesByDotNetName.get(browserEventName) ?? [browserEventName];
+}
+
+function registerBuiltInEventType(dotNetEventNames: string[], options: EventTypeOptions) {
+  dotNetEventNames.forEach(dotNetEventName => eventTypeRegistry.set(dotNetEventName, options));
 }
 
 registerBuiltInEventType(['input', 'change'], {

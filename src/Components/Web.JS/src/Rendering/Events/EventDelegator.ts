@@ -1,8 +1,8 @@
 import { EventFieldInfo } from './EventFieldInfo';
 import { dispatchEvent } from './EventDispatcher';
-import { getEventTypeOptions } from './EventTypes';
+import { getBrowserEventName, getDotNetEventNames, getEventTypeOptions } from './EventTypes';
 
-const nonBubblingEvents = toLookup([
+const nonBubblingBrowserEventNames = toLookup([
   'abort',
   'blur',
   'change',
@@ -25,7 +25,7 @@ const nonBubblingEvents = toLookup([
 
 const alwaysPreventDefaultEvents: { [eventType: string]: boolean } = { submit: true };
 
-const disableableEventNames = toLookup(['click', 'dblclick', 'mousedown', 'mousemove', 'mouseup']);
+const disableableBrowserEventNames = toLookup(['click', 'dblclick', 'mousedown', 'mousemove', 'mouseup']);
 
 // Responsible for adding/removing the eventInfo on an expando property on DOM elements, and
 // calling an EventInfoStore that deals with registering/unregistering the underlying delegated
@@ -45,9 +45,9 @@ export class EventDelegator {
     this.eventInfoStore = new EventInfoStore(this.onGlobalEvent.bind(this));
   }
 
-  public setListener(element: Element, eventName: string, eventHandlerId: number, renderingComponentId: number) {
+  public setListener(element: Element, dotNetEventName: string, eventHandlerId: number, renderingComponentId: number) {
     const infoForElement = this.getEventHandlerInfosForElement(element, true)!;
-    const existingHandler = infoForElement.getHandler(eventName);
+    const existingHandler = infoForElement.getHandler(dotNetEventName);
 
     if (existingHandler) {
       // We can cheaply update the info on the existing object and don't need any other housekeeping
@@ -55,9 +55,9 @@ export class EventDelegator {
       this.eventInfoStore.update(existingHandler.eventHandlerId, eventHandlerId);
     } else {
       // Go through the whole flow which might involve registering a new global handler
-      const newInfo = { element, eventName, eventHandlerId, renderingComponentId };
+      const newInfo = { element, dotNetEventName, eventHandlerId, renderingComponentId };
       this.eventInfoStore.add(newInfo);
-      infoForElement.setHandler(eventName, newInfo);
+      infoForElement.setHandler(dotNetEventName, newInfo);
     }
   }
 
@@ -68,7 +68,7 @@ export class EventDelegator {
   public removeListener(eventHandlerId: number) {
     // This method gets called whenever the .NET-side code reports that a certain event handler
     // has been disposed. However we will already have disposed the info about that handler if
-    // the eventHandlerId for the (element,eventName) pair was replaced during diff application.
+    // the eventHandlerId for the (element, dotNetEventName) pair was replaced during diff application.
     const info = this.eventInfoStore.remove(eventHandlerId);
     if (info) {
       // Looks like this event handler wasn't already disposed
@@ -76,7 +76,7 @@ export class EventDelegator {
       const element = info.element;
       const elementEventInfos = this.getEventHandlerInfosForElement(element, false);
       if (elementEventInfos) {
-        elementEventInfos.removeHandler(info.eventName);
+        elementEventInfos.removeHandler(info.dotNetEventName);
       }
     }
   }
@@ -89,14 +89,14 @@ export class EventDelegator {
     this.eventInfoStore.addGlobalListener('click'); // Ensure we always listen for this
   }
 
-  public setStopPropagation(element: Element, eventName: string, value: boolean) {
+  public setStopPropagation(element: Element, dotNetEventName: string, value: boolean) {
     const infoForElement = this.getEventHandlerInfosForElement(element, true)!;
-    infoForElement.stopPropagation(eventName, value);
+    infoForElement.stopPropagation(dotNetEventName, value);
   }
 
-  public setPreventDefault(element: Element, eventName: string, value: boolean) {
+  public setPreventDefault(element: Element, dotNetEventName: string, value: boolean) {
     const infoForElement = this.getEventHandlerInfosForElement(element, true)!;
-    infoForElement.preventDefault(eventName, value);
+    infoForElement.preventDefault(dotNetEventName, value);
   }
 
   private onGlobalEvent(evt: Event) {
@@ -106,50 +106,56 @@ export class EventDelegator {
 
     // Scan up the element hierarchy, looking for any matching registered event handlers
     let candidateElement = evt.target as Element | null;
-    let eventArgs: any = null; // Populate lazily
-    let eventArgsIsPopulated = false;
-    const eventIsNonBubbling = nonBubblingEvents.hasOwnProperty(evt.type);
+    let eventArgsByDotNetEventName: { [dotNetEventName: string]: any } | null = null; // Populate lazily
+    const browserEventName = evt.type;
+    const eventIsNonBubbling = nonBubblingBrowserEventNames.hasOwnProperty(browserEventName);
     let stopPropagationWasRequested = false;
     while (candidateElement) {
       const handlerInfos = this.getEventHandlerInfosForElement(candidateElement, false);
       if (handlerInfos) {
-        const handlerInfo = handlerInfos.getHandler(evt.type);
-        if (handlerInfo && !eventIsDisabledOnElement(candidateElement, evt.type)) {
-          // We are going to raise an event for this element, so prepare info needed by the .NET code
-          if (!eventArgsIsPopulated) {
-            const eventOptions = getEventTypeOptions(evt.type);
-            eventArgs = eventOptions.createEventArgs ? eventOptions.createEventArgs(evt) : {};
-            eventArgsIsPopulated = true;
+        const dotNetEventNames: string[] = getDotNetEventNames(browserEventName);
+        dotNetEventNames.forEach(dotNetEventName => {
+          const handlerInfo = handlerInfos.getHandler(dotNetEventName);
+          if (handlerInfo && !eventIsDisabledOnElement(candidateElement!, browserEventName)) {
+            // For certain built-in events, having any .NET handler implicitly means we will prevent
+            // the browser's default behavior
+            if (alwaysPreventDefaultEvents.hasOwnProperty(browserEventName)) {
+              evt.preventDefault();
+            }
+
+            // We are going to raise an event for this element, so prepare info needed by the .NET code
+            if (eventArgsByDotNetEventName === null) {
+              eventArgsByDotNetEventName = {};
+            }
+            if (!eventArgsByDotNetEventName.hasOwnProperty(dotNetEventName)) {
+              const eventOptions = getEventTypeOptions(dotNetEventName);
+              const eventArgs = eventOptions.createEventArgs ? eventOptions.createEventArgs(evt) : {};
+              eventArgsByDotNetEventName[dotNetEventName] = eventArgs;
+            }
+
+            dispatchEvent({
+              browserRendererId: this.browserRendererId,
+              eventHandlerId: handlerInfo.eventHandlerId,
+              eventName: dotNetEventName,
+              eventFieldInfo: EventFieldInfo.fromEvent(handlerInfo.renderingComponentId, evt)
+            }, eventArgsByDotNetEventName[dotNetEventName]);
           }
 
-          // For certain built-in events, having any .NET handler implicitly means we will prevent
-          // the browser's default behavior
-          if (alwaysPreventDefaultEvents.hasOwnProperty(evt.type)) {
+          if (handlerInfos.stopPropagation(dotNetEventName)) {
+            stopPropagationWasRequested = true;
+          }
+
+          if (handlerInfos.preventDefault(dotNetEventName)) {
             evt.preventDefault();
           }
-
-          dispatchEvent({
-            browserRendererId: this.browserRendererId,
-            eventHandlerId: handlerInfo.eventHandlerId,
-            eventName: evt.type,
-            eventFieldInfo: EventFieldInfo.fromEvent(handlerInfo.renderingComponentId, evt)
-          }, eventArgs);
-        }
-
-        if (handlerInfos.stopPropagation(evt.type)) {
-          stopPropagationWasRequested = true;
-        }
-
-        if (handlerInfos.preventDefault(evt.type)) {
-          evt.preventDefault();
-        }
+        });
       }
 
       candidateElement = (eventIsNonBubbling || stopPropagationWasRequested) ? null : candidateElement.parentElement;
     }
 
     // Special case for navigation interception
-    if (evt.type === 'click') {
+    if (browserEventName === 'click') {
       this.afterClickCallbacks.forEach(callback => callback(evt as MouseEvent));
     }
   }
@@ -183,23 +189,24 @@ class EventInfoStore {
 
     this.infosByEventHandlerId[info.eventHandlerId] = info;
 
-    this.addGlobalListener(info.eventName);
+    this.addGlobalListener(info.dotNetEventName);
   }
 
   public get(eventHandlerId: number) {
     return this.infosByEventHandlerId[eventHandlerId];
   }
 
-  public addGlobalListener(eventName: string) {
-    if (this.countByEventName.hasOwnProperty(eventName)) {
-      this.countByEventName[eventName]++;
+  public addGlobalListener(dotNetEventName: string) {
+    if (this.countByEventName.hasOwnProperty(dotNetEventName)) {
+      this.countByEventName[dotNetEventName]++;
     } else {
-      this.countByEventName[eventName] = 1;
+      this.countByEventName[dotNetEventName] = 1;
 
       // To make delegation work with non-bubbling events, register a 'capture' listener.
       // We preserve the non-bubbling behavior by only dispatching such events to the targeted element.
-      const useCapture = nonBubblingEvents.hasOwnProperty(eventName);
-      document.addEventListener(eventName, this.globalListener, useCapture);
+      const browserEventName = getBrowserEventName(dotNetEventName);
+      const useCapture = nonBubblingBrowserEventNames.hasOwnProperty(browserEventName);
+      document.addEventListener(browserEventName, this.globalListener, useCapture);
     }
   }
 
@@ -221,10 +228,12 @@ class EventInfoStore {
     if (info) {
       delete this.infosByEventHandlerId[eventHandlerId];
 
-      const eventName = info.eventName;
-      if (--this.countByEventName[eventName] === 0) {
-        delete this.countByEventName[eventName];
-        document.removeEventListener(eventName, this.globalListener);
+      const dotNetEventName = info.dotNetEventName;
+      if (--this.countByEventName[dotNetEventName] === 0) {
+        delete this.countByEventName[dotNetEventName];
+
+        const browserEventName = getBrowserEventName(dotNetEventName);
+        document.removeEventListener(browserEventName, this.globalListener);
       }
     }
 
@@ -233,50 +242,50 @@ class EventInfoStore {
 }
 
 class EventHandlerInfosForElement {
-  // Although we *could* track multiple event handlers per (element, eventName) pair
+  // Although we *could* track multiple event handlers per (element, dotnetEventName) pair
   // (since they have distinct eventHandlerId values), there's no point doing so because
   // our programming model is that you declare event handlers as attributes. An element
   // can only have one attribute with a given name, hence only one event handler with
   // that name at any one time.
-  // So to keep things simple, only track one EventHandlerInfo per (element, eventName)
-  private handlers: { [eventName: string]: EventHandlerInfo } = {};
-  private preventDefaultFlags: { [eventName: string]: boolean } | null = null;
-  private stopPropagationFlags: { [eventName: string]: boolean } | null = null;
+  // So to keep things simple, only track one EventHandlerInfo per (element, dotnetEventName)
+  private handlers: { [dotNetEventName: string]: EventHandlerInfo } = {};
+  private preventDefaultFlags: { [dotNetEventName: string]: boolean } | null = null;
+  private stopPropagationFlags: { [dotNetEventName: string]: boolean } | null = null;
 
-  public getHandler(eventName: string): EventHandlerInfo | null {
-    return this.handlers.hasOwnProperty(eventName) ? this.handlers[eventName] : null;
+  public getHandler(dotNetEventName: string): EventHandlerInfo | null {
+    return this.handlers.hasOwnProperty(dotNetEventName) ? this.handlers[dotNetEventName] : null;
   }
 
-  public setHandler(eventName: string, handler: EventHandlerInfo) {
-    this.handlers[eventName] = handler;
+  public setHandler(dotNetEventName: string, handler: EventHandlerInfo) {
+    this.handlers[dotNetEventName] = handler;
   }
 
-  public removeHandler(eventName: string) {
-    delete this.handlers[eventName];
+  public removeHandler(dotNetEventName: string) {
+    delete this.handlers[dotNetEventName];
   }
 
-  public preventDefault(eventName: string, setValue?: boolean): boolean {
+  public preventDefault(dotNetEventName: string, setValue?: boolean): boolean {
     if (setValue !== undefined) {
       this.preventDefaultFlags = this.preventDefaultFlags || {};
-      this.preventDefaultFlags[eventName] = setValue;
+      this.preventDefaultFlags[dotNetEventName] = setValue;
     }
 
-    return this.preventDefaultFlags ? this.preventDefaultFlags[eventName] : false;
+    return this.preventDefaultFlags ? this.preventDefaultFlags[dotNetEventName] : false;
   }
 
-  public stopPropagation(eventName: string, setValue?: boolean): boolean {
+  public stopPropagation(dotNetEventName: string, setValue?: boolean): boolean {
     if (setValue !== undefined) {
       this.stopPropagationFlags = this.stopPropagationFlags || {};
-      this.stopPropagationFlags[eventName] = setValue;
+      this.stopPropagationFlags[dotNetEventName] = setValue;
     }
 
-    return this.stopPropagationFlags ? this.stopPropagationFlags[eventName] : false;
+    return this.stopPropagationFlags ? this.stopPropagationFlags[dotNetEventName] : false;
   }
 }
 
 interface EventHandlerInfo {
   element: Element;
-  eventName: string;
+  dotNetEventName: string;
   eventHandlerId: number;
 
   // The component whose tree includes the event handler attribute frame, *not* necessarily the
@@ -293,10 +302,10 @@ function toLookup(items: string[]): { [key: string]: boolean } {
   return result;
 }
 
-function eventIsDisabledOnElement(element: Element, eventName: string): boolean {
+function eventIsDisabledOnElement(element: Element, browserEventName: string): boolean {
   // We want to replicate the normal DOM event behavior that, for 'interactive' elements
   // with a 'disabled' attribute, certain mouse events are suppressed
   return (element instanceof HTMLButtonElement || element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)
-    && disableableEventNames.hasOwnProperty(eventName)
+    && disableableBrowserEventNames.hasOwnProperty(browserEventName)
     && element.disabled;
 }
